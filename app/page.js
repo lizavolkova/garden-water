@@ -1,8 +1,39 @@
 "use client";
 
-// pages/index.js
 import { useState } from 'react';
 import Head from 'next/head';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Alert,
+  Box,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Avatar,
+  Divider,
+  Grid,
+} from '@mui/material';
+import {
+  SmartToy,
+  LocationOn,
+  WbSunny,
+  Cloud,
+  Umbrella,
+  Air,
+  WaterDrop,
+  Block,
+} from '@mui/icons-material';
 
 export default function Home() {
   const [zipCode, setZipCode] = useState('10562');
@@ -52,145 +83,262 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-green-800 mb-2">
-              🌱 Garden Watering Assistant
-            </h1>
-            <p className="text-lg text-gray-600">
-              AI-powered watering recommendations for your vegetable garden
-            </p>
-          </header>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Box textAlign="center" mb={6}>
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              margin: '0 auto 24px',
+              bgcolor: 'primary.main',
+              fontSize: '2rem',
+              boxShadow: 3,
+            }}
+          >
+            🌿
+          </Avatar>
+          
+          <Typography variant="h1" component="h1" gutterBottom>
+            Garden Watering Assistant
+          </Typography>
+          
+          <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={3}>
+            <Divider sx={{ flex: 1, maxWidth: 100 }} />
+            <Chip 
+              icon={<SmartToy />} 
+              label="AI POWERED" 
+              color="primary" 
+              variant="outlined"
+              size="small"
+            />
+            <Divider sx={{ flex: 1, maxWidth: 100 }} />
+          </Box>
+          
+          <Typography variant="body1" color="text.secondary" maxWidth="md" mx="auto">
+            Harness the power of artificial intelligence to make informed watering decisions for your vegetable garden, 
+            combining weather forecasts with expert gardening knowledge.
+          </Typography>
+        </Box>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
-                  ZIP Code
-                </label>
-                <input
-                  type="text"
-                  id="zipCode"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter your ZIP code"
-                />
-              </div>
-              <button
+        <Card sx={{ mb: 4 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={3} alignItems="flex-end">
+              <TextField
+                fullWidth
+                label="Location ZIP Code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                placeholder="e.g., 10562"
+                InputProps={{
+                  startAdornment: <LocationOn color="primary" sx={{ mr: 1 }} />,
+                }}
+                variant="outlined"
+              />
+              <Button
+                variant="contained"
+                size="large"
                 onClick={fetchWeatherAndAdvice}
                 disabled={loading || !zipCode}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SmartToy />}
+                sx={{ 
+                  minWidth: 180,
+                  height: 56,
+                  whiteSpace: 'nowrap',
+                }}
               >
-                {loading ? 'Analyzing...' : 'Get Watering Advice'}
-              </button>
-            </div>
-          </div>
+                {loading ? 'Analyzing...' : 'Get AI Advice'}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <span className="text-red-500 mr-2">⚠️</span>
-                <span className="text-red-700">{error}</span>
-              </div>
-            </div>
-          )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        )}
 
-          {wateringAdvice && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-semibold text-green-800 mb-4">
-                🤖 AI Watering Recommendations
-              </h2>
-              <div className="bg-green-50 rounded-lg p-4 mb-4">
-                <p className="text-green-800 font-medium">{wateringAdvice.weekSummary}</p>
-              </div>
+        {wateringAdvice && (
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={3}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+                  <SmartToy fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="h2" component="h2">
+                    AI Watering Recommendations
+                  </Typography>
+                  <Chip 
+                    label="INTELLIGENT GARDEN CARE" 
+                    color="primary" 
+                    variant="outlined" 
+                    size="small"
+                  />
+                </Box>
+              </Box>
               
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300 rounded-lg">
-                  <thead>
-                    <tr className="bg-green-100">
-                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-green-800">Date</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-green-800">Water?</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-green-800">Amount</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-green-800">Priority</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-green-800">Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <Alert severity="info" sx={{ mb: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  Weekly Overview
+                </Typography>
+                <Typography variant="body2">
+                  {wateringAdvice.weekSummary}
+                </Typography>
+              </Alert>
+              
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>📅 Date</TableCell>
+                      <TableCell align="center">💧 Water?</TableCell>
+                      <TableCell align="center">🌊 Amount</TableCell>
+                      <TableCell align="center">⚡ Priority</TableCell>
+                      <TableCell>💭 Reasoning</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {wateringAdvice.dailyRecommendations?.map((day, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="border border-gray-300 px-4 py-3 font-medium">
-                          {formatDate(day.date)}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
-                            day.shouldWater 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {day.shouldWater ? '💧 Yes' : '🚫 No'}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
-                            day.wateringAmount === 'heavy' ? 'bg-blue-200 text-blue-900' :
-                            day.wateringAmount === 'moderate' ? 'bg-blue-100 text-blue-800' :
-                            'bg-blue-50 text-blue-700'
-                          }`}>
-                            {day.wateringAmount || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
-                            day.priority === 'high' ? 'bg-red-100 text-red-800' :
-                            day.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {day.priority || 'low'}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                          {day.reason}
-                        </td>
-                      </tr>
+                      <TableRow key={index} hover>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            {formatDate(day.date)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            icon={day.shouldWater ? <WaterDrop /> : <Block />}
+                            label={day.shouldWater ? 'Yes' : 'No'}
+                            color={day.shouldWater ? 'success' : 'error'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={day.wateringAmount || 'N/A'}
+                            color={
+                              day.wateringAmount === 'heavy' ? 'info' :
+                              day.wateringAmount === 'moderate' ? 'success' :
+                              'default'
+                            }
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={day.priority || 'low'}
+                            color={
+                              day.priority === 'high' ? 'error' :
+                              day.priority === 'medium' ? 'warning' :
+                              'info'
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {day.reason}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
 
-          {weatherData && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                🌤️ 5-Day Weather Forecast
-              </h2>
-              <div className="grid gap-3">
-                {weatherData.map((day, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <span className="font-medium">{formatDate(day.date)}</span>
-                      <p className="text-sm text-gray-600">{day.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{Math.round(day.temp_max)}°F / {Math.round(day.temp_min)}°F</div>
-                      <div className="text-sm text-gray-500">
-                        Humidity: {day.humidity}%
-                      </div>
-                      {day.rain > 0 && (
-                        <div className="text-sm text-blue-600">
-                          Rain: {day.rain.toFixed(2)}"
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        {weatherData && (
+          <Card>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={4}>
+                <Avatar sx={{ bgcolor: 'secondary.main', width: 56, height: 56 }}>
+                  <WbSunny fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="h2" component="h2">
+                    Weather Forecast
+                  </Typography>
+                  <Chip 
+                    label="5-DAY OUTLOOK" 
+                    color="secondary" 
+                    variant="outlined" 
+                    size="small"
+                  />
+                </Box>
+              </Box>
+              
+              <Grid container spacing={2}>
+                {weatherData.map((day, index) => {
+                  const getWeatherIcon = () => {
+                    if (day.description.includes('rain')) return <Umbrella />;
+                    if (day.description.includes('cloud')) return <Cloud />;
+                    if (day.description.includes('clear')) return <WbSunny />;
+                    return <WbSunny />;
+                  };
+
+                  return (
+                    <Grid item xs={12} key={index}>
+                      <Paper 
+                        elevation={1} 
+                        sx={{ 
+                          p: 3, 
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            elevation: 4,
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ bgcolor: 'primary.light' }}>
+                              {getWeatherIcon()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="h6" fontWeight={600}>
+                                {formatDate(day.date)}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" textTransform="capitalize">
+                                {day.description}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <Box textAlign="right">
+                            <Typography variant="h5" fontWeight={700} gutterBottom>
+                              {Math.round(day.temp_max)}°F / {Math.round(day.temp_min)}°F
+                            </Typography>
+                            <Box display="flex" gap={2} justifyContent="flex-end">
+                              <Chip
+                                icon={<Air />}
+                                label={`${day.humidity}% humidity`}
+                                size="small"
+                                variant="outlined"
+                              />
+                              {day.rain > 0 && (
+                                <Chip
+                                  icon={<Umbrella />}
+                                  label={`${day.rain.toFixed(2)}" rain`}
+                                  size="small"
+                                  color="info"
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </CardContent>
+          </Card>
+        )}
+      </Container>
     </>
   );
 }
