@@ -39,6 +39,8 @@ import {
   Block,
   Thermostat,
   Settings,
+  CloudQueue,
+  Public,
 } from '@mui/icons-material';
 
 export default function Home() {
@@ -49,6 +51,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [temperatureUnit, setTemperatureUnit] = useState('fahrenheit');
+  const [weatherAPI, setWeatherAPI] = useState('openweather');
 
   // Temperature utility functions
   const convertFahrenheitToCelsius = (fahrenheit) => {
@@ -72,8 +75,16 @@ export default function Home() {
     return localStorage.getItem('gardenWateringTempUnit') || 'fahrenheit';
   };
 
+  const saveWeatherAPIPreference = (api) => {
+    localStorage.setItem('gardenWateringWeatherAPI', api);
+  };
+  
+  const loadWeatherAPIPreference = () => {
+    return localStorage.getItem('gardenWateringWeatherAPI') || 'openweather';
+  };
+
   // Cache utility functions
-  const getCacheKey = (zipCode) => `gardenWateringData_${zipCode}`;
+  const getCacheKey = (zipCode) => `gardenWateringData_${zipCode}_${weatherAPI}`;
   
   const getCachedData = (zipCode) => {
     try {
@@ -117,8 +128,10 @@ export default function Home() {
   useEffect(() => {
     const savedZipCode = localStorage.getItem('gardenWateringZipCode');
     const savedTempUnit = loadTemperaturePreference();
+    const savedWeatherAPI = loadWeatherAPIPreference();
     
     setTemperatureUnit(savedTempUnit);
+    setWeatherAPI(savedWeatherAPI);
     
     if (savedZipCode) {
       setZipCode(savedZipCode);
@@ -148,7 +161,7 @@ export default function Home() {
       }
       
       // Fetch fresh data
-      const response = await fetch(`/api/weather-advice?zipCode=${zip}`);
+      const response = await fetch(`/api/weather-advice?zipCode=${zip}&weatherAPI=${weatherAPI}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -177,6 +190,13 @@ export default function Home() {
     if (newUnit !== null) {
       setTemperatureUnit(newUnit);
       saveTemperaturePreference(newUnit);
+    }
+  };
+
+  const handleWeatherAPIChange = (event, newAPI) => {
+    if (newAPI !== null) {
+      setWeatherAPI(newAPI);
+      saveWeatherAPIPreference(newAPI);
     }
   };
 
@@ -295,6 +315,30 @@ export default function Home() {
                 }}
                 variant="outlined"
               />
+              
+              {/* Weather API Selection */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                  Weather Source
+                </Typography>
+                <ToggleButtonGroup
+                  value={weatherAPI}
+                  exclusive
+                  onChange={handleWeatherAPIChange}
+                  size="small"
+                  sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
+                >
+                  <ToggleButton value="openweather" sx={{ px: 2 }}>
+                    <CloudQueue sx={{ mr: 0.5, fontSize: '1rem' }} />
+                    OpenWeather
+                  </ToggleButton>
+                  <ToggleButton value="nws" sx={{ px: 2 }}>
+                    <Public sx={{ mr: 0.5, fontSize: '1rem' }} />
+                    NWS
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+              
               <Button
                 variant="contained"
                 size="large"
@@ -355,8 +399,6 @@ export default function Home() {
                       <TableCell>📅 Date</TableCell>
                       <TableCell align="center">🌤️ Weather</TableCell>
                       <TableCell align="center">💧 Water?</TableCell>
-                      <TableCell align="center">🌊 Amount</TableCell>
-                      <TableCell align="center">⚡ Priority</TableCell>
                       <TableCell>💭 Reasoning</TableCell>
                     </TableRow>
                   </TableHead>
@@ -391,35 +433,55 @@ export default function Home() {
                             )}
                           </TableCell>
                           <TableCell align="center">
-                            <Chip
-                              icon={day.shouldWater ? <WaterDrop /> : <Block />}
-                              label={day.shouldWater ? 'Yes' : 'No'}
-                              color={day.shouldWater ? 'success' : 'error'}
-                              size="small"
-                            />
-                            </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={day.wateringAmount || 'N/A'}
-                              color={
-                                day.wateringAmount === 'heavy' ? 'info' :
-                                day.wateringAmount === 'moderate' ? 'success' :
-                                'default'
+                            {(() => {
+                              // Handle new API format with wateringStatus
+                              let status, color, icon;
+                              
+                              if (day.wateringStatus) {
+                                status = day.wateringStatus;
+                              } else {
+                                // Backward compatibility: map old format to new
+                                if (day.shouldWater) {
+                                  if (day.priority === 'high' || day.wateringAmount === 'heavy') {
+                                    status = 'yes';
+                                  } else if (day.priority === 'medium' || day.wateringAmount === 'moderate') {
+                                    status = 'maybe';
+                                  } else {
+                                    status = 'yes';
+                                  }
+                                } else {
+                                  status = 'no';
+                                }
                               }
-                              size="small"
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={day.priority || 'low'}
-                              color={
-                                day.priority === 'high' ? 'error' :
-                                day.priority === 'medium' ? 'warning' :
-                                'info'
+                              
+                              switch (status) {
+                                case 'yes':
+                                  color = 'success';
+                                  icon = <WaterDrop />;
+                                  break;
+                                case 'maybe':
+                                  color = 'warning';
+                                  icon = <WaterDrop />;
+                                  break;
+                                case 'no':
+                                  color = 'error';
+                                  icon = <Block />;
+                                  break;
+                                default:
+                                  color = 'default';
+                                  icon = <Block />;
+                                  status = 'no';
                               }
-                              size="small"
-                            />
+                              
+                              return (
+                                <Chip
+                                  icon={icon}
+                                  label={status.charAt(0).toUpperCase() + status.slice(1)}
+                                  color={color}
+                                  size="small"
+                                />
+                              );
+                            })()}
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" color="text.secondary">
