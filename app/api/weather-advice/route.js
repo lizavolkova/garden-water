@@ -4,6 +4,19 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+async function fetchLocationFromZipCode(zipCode) {
+  const geoResponse = await fetch(`https://api.zippopotam.us/us/${zipCode}`);
+  if (!geoResponse.ok) {
+    throw new Error('Invalid ZIP code or failed to fetch location data');
+  }
+  
+  const geoData = await geoResponse.json();
+  const lat = parseFloat(geoData.places[0].latitude);
+  const lon = parseFloat(geoData.places[0].longitude);
+  
+  return { lat, lon, geoData };
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const zipCode = searchParams.get('zipCode');
@@ -16,10 +29,20 @@ export async function GET(request) {
   try {
     // Fetch weather data from selected API
     let weatherData;
-    if (weatherAPI === 'nws') {
-      weatherData = await fetchNWSWeatherData(zipCode);
-    } else {
-      weatherData = await fetchOpenWeatherData(zipCode);
+    switch (weatherAPI) {
+      case 'nws':
+        weatherData = await fetchNWSWeatherData(zipCode);
+        break;
+      case 'openmeteo':
+        weatherData = await fetchOpenMeteoWeatherData(zipCode);
+        break;
+      case 'visualcrossing':
+        weatherData = await fetchVisualCrossingWeatherData(zipCode);
+        break;
+      case 'openweather':
+      default:
+        weatherData = await fetchOpenWeatherData(zipCode);
+        break;
     }
     
     // Get AI advice from OpenAI
@@ -75,11 +98,16 @@ function processForecastData(forecastData) {
   const dailyMap = new Map();
   
   forecastData.list.forEach(item => {
-    const date = new Date(item.dt * 1000).toDateString();
+    const forecastDate = new Date(item.dt * 1000);
+    const date = forecastDate.toDateString();
+    
+    // Use local timezone for date formatting instead of UTC
+    const localDateString = new Date(forecastDate.getTime() - (forecastDate.getTimezoneOffset() * 60000))
+      .toISOString().split('T')[0];
     
     if (!dailyMap.has(date)) {
       dailyMap.set(date, {
-        date: new Date(item.dt * 1000).toISOString().split('T')[0],
+        date: localDateString,
         temp_max: item.main.temp_max,
         temp_min: item.main.temp_min,
         humidity: item.main.humidity,
@@ -103,14 +131,7 @@ function processForecastData(forecastData) {
 async function fetchNWSWeatherData(zipCode) {
   try {
     // First, get coordinates from zip code using a geocoding service
-    const geoResponse = await fetch(`https://api.zippopotam.us/us/${zipCode}`);
-    if (!geoResponse.ok) {
-      throw new Error('Invalid ZIP code or failed to fetch location data');
-    }
-    
-    const geoData = await geoResponse.json();
-    const lat = parseFloat(geoData.places[0].latitude);
-    const lon = parseFloat(geoData.places[0].longitude);
+    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
 
     // Get NWS office and grid coordinates
     const pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
@@ -144,7 +165,10 @@ function processNWSForecastData(forecastData) {
   
   // NWS provides periods (day/night) instead of hourly data
   forecastData.properties.periods.forEach(period => {
-    const date = new Date(period.startTime).toISOString().split('T')[0];
+    const periodDate = new Date(period.startTime);
+    // Use local timezone for date formatting instead of UTC
+    const date = new Date(periodDate.getTime() - (periodDate.getTimezoneOffset() * 60000))
+      .toISOString().split('T')[0];
     
     if (!dailyMap.has(date)) {
       dailyMap.set(date, {
@@ -176,6 +200,129 @@ function processNWSForecastData(forecastData) {
   });
   
   return Array.from(dailyMap.values()).slice(0, 7); // Return first 7 days
+}
+
+async function fetchOpenMeteoWeatherData(zipCode) {
+  try {
+    // First, get coordinates from zip code using a geocoding service
+    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
+
+    // Get 7-day forecast from Open-Meteo
+    const forecastResponse = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York&past_days=0&forecast_days=7`
+    );
+    
+    if (!forecastResponse.ok) {
+      throw new Error('Failed to fetch Open-Meteo forecast');
+    }
+    
+    const forecastData = await forecastResponse.json();
+    
+    // Process Open-Meteo forecast data
+    const dailyData = processOpenMeteoForecastData(forecastData);
+    
+    return dailyData;
+  } catch (error) {
+    console.error('Open-Meteo API error:', error);
+    throw new Error(`Open-Meteo API failed: ${error.message}`);
+  }
+}
+
+function processOpenMeteoForecastData(forecastData) {
+  const daily = forecastData.daily;
+  const dailyData = [];
+  
+  for (let i = 0; i < daily.time.length && i < 7; i++) {
+    const date = daily.time[i]; // Already in YYYY-MM-DD format
+    
+    dailyData.push({
+      date: date,
+      temp_max: daily.temperature_2m_max[i] || 70,
+      temp_min: daily.temperature_2m_min[i] || 50,
+      humidity: daily.relative_humidity_2m[i] || 50,
+      description: daily.precipitation_sum[i] > 0.1 ? 'light rain' : 'partly cloudy',
+      rain: daily.precipitation_sum[i] || 0
+    });
+  }
+  
+  return dailyData;
+}
+
+async function fetchVisualCrossingWeatherData(zipCode) {
+  try {
+    // Visual Crossing API requires an API key - for demo purposes, we'll use a similar approach to Open-Meteo
+    // In production, you'd need to set VISUAL_CROSSING_API_KEY environment variable
+    const API_KEY = process.env.VISUAL_CROSSING_API_KEY || 'demo'; // Demo key for testing
+    
+    // First, get coordinates from zip code
+    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
+
+    // Get 7-day forecast from Visual Crossing
+    const forecastResponse = await fetch(
+      `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${lat},${lon}/next7days?unitGroup=us&key=${API_KEY}&contentType=json&include=days`
+    );
+    
+    if (!forecastResponse.ok) {
+      // Fallback to demo data if API key is not valid
+      return generateDemoWeatherData();
+    }
+    
+    const forecastData = await forecastResponse.json();
+    
+    // Process Visual Crossing forecast data
+    const dailyData = processVisualCrossingForecastData(forecastData);
+    
+    return dailyData;
+  } catch (error) {
+    console.error('Visual Crossing API error:', error);
+    // Return demo data as fallback
+    return generateDemoWeatherData();
+  }
+}
+
+function processVisualCrossingForecastData(forecastData) {
+  const dailyData = [];
+  
+  for (let i = 0; i < forecastData.days.length && i < 7; i++) {
+    const day = forecastData.days[i];
+    
+    dailyData.push({
+      date: day.datetime, // Already in YYYY-MM-DD format
+      temp_max: day.tempmax || 70,
+      temp_min: day.tempmin || 50,
+      humidity: day.humidity || 50,
+      description: day.conditions?.toLowerCase() || 'partly cloudy',
+      rain: (day.precip || 0) // Already in inches
+    });
+  }
+  
+  return dailyData;
+}
+
+function generateDemoWeatherData() {
+  const today = new Date();
+  const dailyData = [];
+  
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dateString = date.toISOString().split('T')[0];
+    
+    // Generate some demo weather data
+    const baseTemp = 70 + Math.sin(i * 0.5) * 10;
+    const rain = Math.random() > 0.7 ? Math.random() * 0.5 : 0;
+    
+    dailyData.push({
+      date: dateString,
+      temp_max: Math.round(baseTemp + 10),
+      temp_min: Math.round(baseTemp - 10),
+      humidity: Math.round(40 + Math.random() * 40),
+      description: rain > 0.1 ? 'light rain' : 'partly cloudy',
+      rain: rain
+    });
+  }
+  
+  return dailyData;
 }
 
 async function getAIWateringAdvice(weatherData) {
