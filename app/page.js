@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import {
   Container,
@@ -23,6 +23,10 @@ import {
   Avatar,
   Divider,
   Grid,
+  ToggleButton,
+  ToggleButtonGroup,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   SmartToy,
@@ -33,21 +37,118 @@ import {
   Air,
   WaterDrop,
   Block,
+  Thermostat,
+  Settings,
 } from '@mui/icons-material';
 
 export default function Home() {
-  const [zipCode, setZipCode] = useState('10562');
+  const [zipCode, setZipCode] = useState('');
   const [weatherData, setWeatherData] = useState(null);
   const [wateringAdvice, setWateringAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [temperatureUnit, setTemperatureUnit] = useState('fahrenheit');
 
-  const fetchWeatherAndAdvice = async () => {
+  // Temperature utility functions
+  const convertFahrenheitToCelsius = (fahrenheit) => {
+    return (fahrenheit - 32) * 5 / 9;
+  };
+  
+  const formatTemperature = (tempF, unit = temperatureUnit) => {
+    if (unit === 'celsius') {
+      const celsius = convertFahrenheitToCelsius(tempF);
+      return `${Math.round(celsius)}°C`;
+    }
+    return `${Math.round(tempF)}°F`;
+  };
+
+  // Preference management
+  const saveTemperaturePreference = (unit) => {
+    localStorage.setItem('gardenWateringTempUnit', unit);
+  };
+  
+  const loadTemperaturePreference = () => {
+    return localStorage.getItem('gardenWateringTempUnit') || 'fahrenheit';
+  };
+
+  // Cache utility functions
+  const getCacheKey = (zipCode) => `gardenWateringData_${zipCode}`;
+  
+  const getCachedData = (zipCode) => {
+    try {
+      const cacheKey = getCacheKey(zipCode);
+      const cached = localStorage.getItem(cacheKey);
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      const now = Date.now();
+      const cacheAge = now - data.timestamp;
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      if (cacheAge > twentyFourHours) {
+        localStorage.removeItem(cacheKey);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error reading cache:', error);
+      return null;
+    }
+  };
+  
+  const setCachedData = (zipCode, weather, advice) => {
+    try {
+      const cacheKey = getCacheKey(zipCode);
+      const data = {
+        weather,
+        advice,
+        timestamp: Date.now(),
+        zipCode
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving cache:', error);
+    }
+  };
+
+  // Load saved location and preferences on component mount
+  useEffect(() => {
+    const savedZipCode = localStorage.getItem('gardenWateringZipCode');
+    const savedTempUnit = loadTemperaturePreference();
+    
+    setTemperatureUnit(savedTempUnit);
+    
+    if (savedZipCode) {
+      setZipCode(savedZipCode);
+      // Auto-fetch data for saved location
+      fetchWeatherAndAdviceForZip(savedZipCode);
+    } else {
+      setInitialLoad(false);
+    }
+  }, []);
+
+  const fetchWeatherAndAdviceForZip = async (zip, forceRefresh = false) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`/api/weather-advice?zipCode=${zipCode}`);
+      // Check cache first unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = getCachedData(zip);
+        if (cachedData) {
+          setWeatherData(cachedData.weather);
+          setWateringAdvice(cachedData.advice);
+          localStorage.setItem('gardenWateringZipCode', zip);
+          setLoading(false);
+          setInitialLoad(false);
+          return;
+        }
+      }
+      
+      // Fetch fresh data
+      const response = await fetch(`/api/weather-advice?zipCode=${zip}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -56,10 +157,26 @@ export default function Home() {
       
       setWeatherData(data.weather);
       setWateringAdvice(data.advice);
+      
+      // Save to cache and localStorage
+      setCachedData(zip, data.weather, data.advice);
+      localStorage.setItem('gardenWateringZipCode', zip);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
+    }
+  };
+
+  const fetchWeatherAndAdvice = async () => {
+    await fetchWeatherAndAdviceForZip(zipCode, true); // Force refresh when manually triggered
+  };
+
+  const handleTemperatureUnitChange = (event, newUnit) => {
+    if (newUnit !== null) {
+      setTemperatureUnit(newUnit);
+      saveTemperaturePreference(newUnit);
     }
   };
 
@@ -75,6 +192,28 @@ export default function Home() {
     return shouldWater ? '💧' : '🚫';
   };
 
+  const getWeatherDisplay = (date) => {
+    if (!weatherData) return null;
+    
+    const weatherDay = weatherData.find(day => day.date === date);
+    if (!weatherDay) return null;
+    
+    const getWeatherIcon = () => {
+      if (weatherDay.description.includes('rain')) return '🌧️';
+      if (weatherDay.description.includes('cloud')) return '☁️';
+      if (weatherDay.description.includes('clear') || weatherDay.description.includes('sun')) return '☀️';
+      if (weatherDay.description.includes('snow')) return '❄️';
+      return '☀️';
+    };
+
+    return {
+      icon: getWeatherIcon(),
+      temp: `${formatTemperature(weatherDay.temp_max)}/${formatTemperature(weatherDay.temp_min)}`,
+      description: weatherDay.description,
+      rain: weatherDay.rain > 0 ? `${weatherDay.rain.toFixed(1)}"` : null
+    };
+  };
+
   return (
     <>
       <Head>
@@ -84,7 +223,29 @@ export default function Home() {
       </Head>
 
       <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box textAlign="center" mb={6}>
+        <Box textAlign="center" mb={6} position="relative">
+          {/* Temperature Unit Toggle */}
+          <Box position="absolute" top={0} right={0}>
+            <Tooltip title="Temperature Unit">
+              <ToggleButtonGroup
+                value={temperatureUnit}
+                exclusive
+                onChange={handleTemperatureUnitChange}
+                size="small"
+                sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
+              >
+                <ToggleButton value="fahrenheit" sx={{ px: 2 }}>
+                  <Thermostat sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  °F
+                </ToggleButton>
+                <ToggleButton value="celsius" sx={{ px: 2 }}>
+                  <Thermostat sx={{ mr: 0.5, fontSize: '1rem' }} />
+                  °C
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Tooltip>
+          </Box>
+
           <Avatar
             sx={{
               width: 80,
@@ -192,6 +353,7 @@ export default function Home() {
                   <TableHead>
                     <TableRow>
                       <TableCell>📅 Date</TableCell>
+                      <TableCell align="center">🌤️ Weather</TableCell>
                       <TableCell align="center">💧 Water?</TableCell>
                       <TableCell align="center">🌊 Amount</TableCell>
                       <TableCell align="center">⚡ Priority</TableCell>
@@ -199,51 +361,74 @@ export default function Home() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {wateringAdvice.dailyRecommendations?.map((day, index) => (
-                      <TableRow key={index} hover>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600}>
-                            {formatDate(day.date)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            icon={day.shouldWater ? <WaterDrop /> : <Block />}
-                            label={day.shouldWater ? 'Yes' : 'No'}
-                            color={day.shouldWater ? 'success' : 'error'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={day.wateringAmount || 'N/A'}
-                            color={
-                              day.wateringAmount === 'heavy' ? 'info' :
-                              day.wateringAmount === 'moderate' ? 'success' :
-                              'default'
-                            }
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={day.priority || 'low'}
-                            color={
-                              day.priority === 'high' ? 'error' :
-                              day.priority === 'medium' ? 'warning' :
-                              'info'
-                            }
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {day.reason}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {wateringAdvice.dailyRecommendations?.map((day, index) => {
+                      const weather = getWeatherDisplay(day.date);
+                      return (
+                        <TableRow key={index} hover>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={600}>
+                              {formatDate(day.date)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            {weather && (
+                              <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+                                <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
+                                  {weather.icon}
+                                </Typography>
+                                <Typography variant="caption" fontWeight={600}>
+                                  {weather.temp}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" textTransform="capitalize" sx={{ fontSize: '0.65rem', lineHeight: 1.1 }}>
+                                  {weather.description}
+                                </Typography>
+                                {weather.rain && (
+                                  <Typography variant="caption" color="info.main" sx={{ fontSize: '0.65rem' }}>
+                                    {weather.rain} rain
+                                  </Typography>
+                                )}
+                              </Box>
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              icon={day.shouldWater ? <WaterDrop /> : <Block />}
+                              label={day.shouldWater ? 'Yes' : 'No'}
+                              color={day.shouldWater ? 'success' : 'error'}
+                              size="small"
+                            />
+                            </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={day.wateringAmount || 'N/A'}
+                              color={
+                                day.wateringAmount === 'heavy' ? 'info' :
+                                day.wateringAmount === 'moderate' ? 'success' :
+                                'default'
+                              }
+                              size="small"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={day.priority || 'low'}
+                              color={
+                                day.priority === 'high' ? 'error' :
+                                day.priority === 'medium' ? 'warning' :
+                                'info'
+                              }
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {day.reason}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -263,7 +448,7 @@ export default function Home() {
                     Weather Forecast
                   </Typography>
                   <Chip 
-                    label="5-DAY OUTLOOK" 
+                    label="7-DAY OUTLOOK" 
                     color="secondary" 
                     variant="outlined" 
                     size="small"
@@ -271,7 +456,25 @@ export default function Home() {
                 </Box>
               </Box>
               
-              <Grid container spacing={2}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  gap: 2, 
+                  overflowX: 'auto',
+                  pb: 1,
+                  '&::-webkit-scrollbar': {
+                    height: 8,
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderRadius: 4,
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'primary.main',
+                    borderRadius: 4,
+                  }
+                }}
+              >
                 {weatherData.map((day, index) => {
                   const getWeatherIcon = () => {
                     if (day.description.includes('rain')) return <Umbrella />;
@@ -281,60 +484,60 @@ export default function Home() {
                   };
 
                   return (
-                    <Grid item xs={12} key={index}>
-                      <Paper 
-                        elevation={1} 
-                        sx={{ 
-                          p: 3, 
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            elevation: 4,
-                            transform: 'translateY(-2px)'
-                          }
-                        }}
-                      >
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                          <Box display="flex" alignItems="center" gap={2}>
-                            <Avatar sx={{ bgcolor: 'primary.light' }}>
-                              {getWeatherIcon()}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="h6" fontWeight={600}>
-                                {formatDate(day.date)}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" textTransform="capitalize">
-                                {day.description}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          
-                          <Box textAlign="right">
-                            <Typography variant="h5" fontWeight={700} gutterBottom>
-                              {Math.round(day.temp_max)}°F / {Math.round(day.temp_min)}°F
-                            </Typography>
-                            <Box display="flex" gap={2} justifyContent="flex-end">
-                              <Chip
-                                icon={<Air />}
-                                label={`${day.humidity}% humidity`}
-                                size="small"
-                                variant="outlined"
-                              />
-                              {day.rain > 0 && (
-                                <Chip
-                                  icon={<Umbrella />}
-                                  label={`${day.rain.toFixed(2)}" rain`}
-                                  size="small"
-                                  color="info"
-                                />
-                              )}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Paper>
-                    </Grid>
+                    <Paper 
+                      key={index}
+                      elevation={1} 
+                      sx={{ 
+                        minWidth: 160,
+                        width: 160,
+                        height: 200,
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        textAlign: 'center',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          elevation: 4,
+                        }
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={600} color="text.secondary">
+                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </Typography>
+                      
+                      <Avatar sx={{ bgcolor: 'primary.light', width: 48, height: 48, mb: 1 }}>
+                        {getWeatherIcon()}
+                      </Avatar>
+                      
+                      <Typography variant="body2" color="text.secondary" textTransform="capitalize" sx={{ fontSize: '0.75rem', lineHeight: 1.2, mb: 1 }}>
+                        {day.description}
+                      </Typography>
+                      
+                      <Box>
+                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1rem' }}>
+                          {formatTemperature(day.temp_max)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                          {formatTemperature(day.temp_min)}
+                        </Typography>
+                      </Box>
+                      
+                      <Box display="flex" flexDirection="column" gap={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          {day.humidity}% humidity
+                        </Typography>
+                        {day.rain > 0 && (
+                          <Typography variant="caption" color="info.main">
+                            {day.rain.toFixed(1)}" rain
+                          </Typography>
+                        )}
+                      </Box>
+                    </Paper>
                   );
                 })}
-              </Grid>
+              </Box>
             </CardContent>
           </Card>
         )}

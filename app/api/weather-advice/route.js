@@ -48,7 +48,7 @@ async function fetchWeatherData(zipCode) {
   const geoData = await geoResponse.json();
   const { lat, lon } = geoData;
 
-  // Get 5-day forecast
+  // Get 5-day forecast in imperial units (Fahrenheit)
   const forecastResponse = await fetch(
     `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`
   );
@@ -91,7 +91,7 @@ function processForecastData(forecastData) {
     }
   });
   
-  return Array.from(dailyMap.values()).slice(0, 5); // Return first 5 days
+  return Array.from(dailyMap.values()).slice(0, 7); // Return first 7 days
 }
 
 async function getAIWateringAdvice(weatherData) {
@@ -103,7 +103,7 @@ async function getAIWateringAdvice(weatherData) {
     `${day.date}: High ${Math.round(day.temp_max)}°F, Low ${Math.round(day.temp_min)}°F, Humidity ${day.humidity}%, Rain ${day.rain.toFixed(2)} inches, Conditions: ${day.description}`
   ).join('\n');
 
-  const prompt = `Given this 5-day weather forecast for a vegetable garden, please provide specific daily watering recommendations:
+  const prompt = `Given this 7-day weather forecast for a vegetable garden, please provide specific daily watering recommendations:
 
 ${weatherSummary}
 
@@ -125,7 +125,7 @@ Consider factors like temperature, rainfall, humidity, and consecutive dry days.
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

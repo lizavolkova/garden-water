@@ -124,7 +124,6 @@ const theme = createTheme({
           border: '1px solid rgba(214, 184, 149, 0.2)',
           '&:hover': {
             boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
-            transform: 'translateY(-4px)',
           },
         },
       },
