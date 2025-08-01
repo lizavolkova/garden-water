@@ -225,7 +225,15 @@ const weather = weatherData.map(d => ({
   
   /* ---------- PROMPT ---------- */
   const prompt =
-`TASK  Decide when to water a vegetable garden in Ossining, NY (zip 10562).
+`
+SYSTEM: You are a master vegetable gardener. Think step-by-step but **only return JSON**.
+
+TASK  For each day decide watering. Process the list in order; maintain this state:
+  state = { lastYesDate: null, yesThisWeek: 0 }
+
+  When you decide "yes":
+  • state.lastYesDate = current date
+  • state.yesThisWeek += 1
 
 DATA  ${JSON.stringify(weather)}
 RULES ${JSON.stringify(rules)}
@@ -235,13 +243,34 @@ d=date, hi/day-high°F, lo/day-low°F, rain=today inches,
 rainPast3=sum inches today+previous 2 days (never future rain).
 
 LOGIC
-1  Max ${rules.maxDays} "yes" per week.
-2  No "yes" on consecutive days (minGap ${rules.minGap}).
-3  Skip if rain ≥ rainSkip OR rainPast3 ≥ rainSkip3.
-4  Else "yes" when (hi ≥ hot OR rainPast3 < 0.2) AND gap rule satisfied.
-5  Else "maybe" (check soil) or "no" (if cool & moist).
-6  Reason: one warm, conversational sentence that explains *why* in plain English, e.g. “We’ve had good soaking rain this week—let the soil dry out today." or "It's warm today, but if you watered yesterday you should be all set today"
+1 Max ${rules.maxDays} yes per ISO-week (Mon-Sun).
+2 No yes if (today − lastYesDate) ≤ ${rules.minGap} days.
+3 Skip if rain ≥ ${rules.rainSkip} **OR** rainPast3 ≥ ${rules.rainSkip3}.
+4 Else yes when (hi ≥ ${rules.hot} OR rainPast3 < 0.2) AND rules 1-2 satisfied.
+5 Else maybe.
+6  Reason: Brief, user friendly explanation considering soil moisture, recent watering, and weather
+7 "weekSummary": "Brief overall recommendation for the week including total water needs"
 
+  IMPORTANT VEGETABLE GARDEN WATERING PRINCIPLES:
+  - Most vegetables need 1-1.5 inches of water per week (including rainfall)
+  - Deep, infrequent watering (2-3 times per week) is better than daily shallow watering
+  - Deep watering encourages strong root development and drought resistance
+  - Daily watering creates shallow roots and weak plants
+  - Water early morning (6-10 AM) to reduce evaporation and disease
+  - Skip watering if soil is still moist from previous watering or recent rain
+  - Consider cumulative rainfall over 3-7 days, not just daily amounts
+  - Hot, windy days increase water needs; cool, humid days reduce them
+
+STRICT WATERING RULES TO FOLLOW:
+  1. NEVER recommend watering on consecutive days - always skip at least 1 day between waterings
+  2. Maximum 3 watering days per week, ideally 2 days per week
+  3. If today's rain >= 0.5" OR 3-day total rain >= 1.0" → wateringStatus = "no"
+  4. After any "yes" watering day, the next day must be "no" (minimum 1 day gap)
+  5. Ideal pattern: Water Monday, skip Tuesday, water Wednesday, skip Thursday/Friday, water Saturday, skip Sunday
+  6. Hot days (temp_max >= 85°F) may justify closer spacing but NEVER consecutive days
+  7. Cool days (temp_max < 70°F) should have 2-3 day gaps between watering
+  8. Each watering should be deep and thorough, not light surface watering
+  
 OUTPUT  valid JSON only:
 {
  "weekSummary":"string",
@@ -249,6 +278,28 @@ OUTPUT  valid JSON only:
    {"date":"YYYY-MM-DD","wateringStatus":"yes|maybe|no","reason":"string"}
  ]
 }`;   // keep tight, no blank lines
+
+try {
+const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0.25,          // lower randomness = fewer surprises
+    max_tokens: 600,           // you can probably drop to 500 now
+    messages: [
+      { role: "system",
+        content: "You are an expert vegetable-garden assistant. Reply with VALID JSON only." },
+      { role: "user", content: prompt }
+    ],
+    response_format: { type: "json_object" }
+  });
+
+  return JSON.parse(completion.choices[0].message.content);
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    throw new Error('Failed to get AI watering advice');
+  }
+}
+
+
 // ----------------------------------------
 // const weatherSummary = weatherData.map(day => ({
 //     date: day.date,                         // "YYYY-MM-DD"
@@ -344,22 +395,3 @@ OUTPUT  valid JSON only:
 
 
 //     return JSON.parse(completion.choices[0].message.content);
-try {
-const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.25,          // lower randomness = fewer surprises
-    max_tokens: 600,           // you can probably drop to 500 now
-    messages: [
-      { role: "system",
-        content: "You are an expert vegetable-garden assistant. Reply with VALID JSON only." },
-      { role: "user", content: prompt }
-    ],
-    response_format: { type: "json_object" }
-  });
-
-  return JSON.parse(completion.choices[0].message.content);
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    throw new Error('Failed to get AI watering advice');
-  }
-}

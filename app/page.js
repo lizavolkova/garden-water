@@ -124,24 +124,6 @@ export default function Home() {
     }
   }, [getCacheKey]);
 
-  // Load saved location and preferences on component mount
-  useEffect(() => {
-    const savedZipCode = localStorage.getItem('gardenWateringZipCode');
-    const savedTempUnit = loadTemperaturePreference();
-    const savedWeatherAPI = loadWeatherAPIPreference();
-    
-    setTemperatureUnit(savedTempUnit);
-    setWeatherAPI(savedWeatherAPI);
-    
-    if (savedZipCode) {
-      setZipCode(savedZipCode);
-      // Auto-fetch data for saved location
-      fetchWeatherAndAdviceForZip(savedZipCode);
-    } else {
-      setInitialLoad(false);
-    }
-  }, [fetchWeatherAndAdviceForZip]);
-
   const fetchWeatherAndAdviceForZip = useCallback(async (zip, forceRefresh = false) => {
     setLoading(true);
     setError(null);
@@ -181,6 +163,26 @@ export default function Home() {
       setInitialLoad(false);
     }
   }, [weatherAPI, getCachedData, setCachedData]);
+  
+  // Load saved location and preferences on component mount
+  useEffect(() => {
+    const savedZipCode = localStorage.getItem('gardenWateringZipCode');
+    const savedTempUnit = loadTemperaturePreference();
+    const savedWeatherAPI = loadWeatherAPIPreference();
+    
+    setTemperatureUnit(savedTempUnit);
+    setWeatherAPI(savedWeatherAPI);
+    
+    if (savedZipCode) {
+      setZipCode(savedZipCode);
+      // Auto-fetch data for saved location
+      fetchWeatherAndAdviceForZip(savedZipCode);
+    } else {
+      setInitialLoad(false);
+    }
+  }, [fetchWeatherAndAdviceForZip]);
+
+  
 
   const fetchWeatherAndAdvice = async () => {
     await fetchWeatherAndAdviceForZip(zipCode, true); // Force refresh when manually triggered
