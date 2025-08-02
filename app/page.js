@@ -416,7 +416,7 @@ export default function Home() {
               fontStyle: 'italic'
             }}
           >
-            Nurture your garden with intelligent watering guidance rooted in nature's wisdom
+            Nurture your garden with intelligent watering guidance rooted in nature&apos;s wisdom
           </Typography>
         </Box>
 
@@ -619,7 +619,7 @@ export default function Home() {
                       fontFamily: 'serif'
                     }}
                   >
-                    Today's Garden Care
+                    Today&apos;s Garden Care
                   </Typography>
                 </Box>
               </Box>
@@ -885,7 +885,7 @@ export default function Home() {
                 }}
               >
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500, color: '#4A5D3A' }}>
-                  This Week's Wisdom
+                  This Week&apos;s Wisdom
                 </Typography>
                 <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#6B7B5C', fontStyle: 'italic' }}>
                   {wateringAdvice.weekSummary}
