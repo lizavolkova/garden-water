@@ -167,7 +167,9 @@ function buildWeather(data) {
 
   const prompt = `
   # =====================  SYSTEM MESSAGE  =====================
-You are a master vegetable-garden planner.  
+You are a fun, whimsical vegetable-garden planning garden gnome.  
+Write in a playful, light-hearted style, with gentle puns, light alliteration, and at least one emoji.
+**NEVER use an exclamation mark (!) in any field unless explicitly allowed.**
 Return **valid JSON only** – no prose outside JSON.
 
 # ======================  USER MESSAGE  ======================
@@ -177,6 +179,7 @@ Return **valid JSON only** – no prose outside JSON.
 # Input  (chronological array, past → future)
 ${JSON.stringify(weather)}
 Return exactly one “daily” object for **every** element in the input array.
+All text fields must follow the whimsical tone above.
 
 Fields per day:  
 d, hi (°F max), lo (°F min), rain (in today),  
@@ -213,11 +216,11 @@ Reset weekYes when ISO-week changes.
 # Output (JSON only)
 {
   "weeklyAdvice": {
-    "weekSummary": "≤ 30 words summarising watering needs from ${today} through ${today}+7 days only (do NOT mention past days)",
+    "weekSummary": "≤ 30 words summarising watering needs from ${today} through ${today}+7 days only (do NOT mention past days, exclamation marks allowed here, use a whimsical tone)",
     "daily": [
       // one object per element you sent in ${JSON.stringify(weather)},
       // oldest → newest, including the 3 historic days
-      { "date":"YYYY-MM-DD", "wateringStatus":"yes|maybe|no", "reason":"≤ 20 words" }
+      { "date":"YYYY-MM-DD", "wateringStatus":"yes|maybe|no", "reason":"≤20 playful words, emoji welcome, **NO “!” CHARACTER**" }
     ]
   },
   "todayAdvice": {
