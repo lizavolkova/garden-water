@@ -651,7 +651,7 @@ export default function Home() {
                          todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
                   fontFamily: 'serif'
                 }}>
-                  {todayAdvice.shouldWater === 'yes' ? '🌿 Water your garden today' : 
+                  {todayAdvice.shouldWater === 'yes' ? '💧 Water your garden today' : 
                    todayAdvice.shouldWater === 'maybe' ? '🌱 Consider watering today' : 
                    '🍂 Let your garden rest today'}
                 </Typography>
