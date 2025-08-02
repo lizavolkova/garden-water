@@ -1,34 +1,33 @@
 import OpenAI from 'openai';
+import { fetchOpenWeatherData } from '../../utils/weather/openweather.js';
+import { fetchNWSWeatherData } from '../../utils/weather/nws.js';
+import { fetchOpenMeteoWeatherData } from '../../utils/weather/openmeteo.js';
+import { fetchVisualCrossingWeatherData } from '../../utils/weather/visualcrossing.js';
+import { getLocalDateString } from '../../utils/weather/common.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function fetchLocationFromZipCode(zipCode) {
-  const geoResponse = await fetch(`https://api.zippopotam.us/us/${zipCode}`);
-  if (!geoResponse.ok) {
-    throw new Error('Invalid ZIP code or failed to fetch location data');
-  }
-  
-  const geoData = await geoResponse.json();
-  const lat = parseFloat(geoData.places[0].latitude);
-  const lon = parseFloat(geoData.places[0].longitude);
-  
-  return { lat, lon, geoData };
-}
-
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const zipCode = searchParams.get('zipCode');
   const weatherAPI = searchParams.get('weatherAPI') || 'openweather';
+  const debug = searchParams.get('debug') === 'true';
+
+  console.log(`[Weather API] New request - ZIP: ${zipCode}, API: ${weatherAPI}, Debug: ${debug}`);
 
   if (!zipCode) {
+    console.error('[Weather API] ZIP code missing from request');
     return Response.json({ error: 'ZIP code is required' }, { status: 400 });
   }
 
   try {
     // Fetch weather data from selected API
+    console.log(`[Weather API] Fetching weather data using ${weatherAPI} API`);
     let weatherData;
+    const startTime = Date.now();
+    
     switch (weatherAPI) {
       case 'nws':
         weatherData = await fetchNWSWeatherData(zipCode);
@@ -45,288 +44,53 @@ export async function GET(request) {
         break;
     }
     
-    // Get AI advice from OpenAI
+    const fetchTime = Date.now() - startTime;
+    console.log(`[Weather API] Weather data fetched in ${fetchTime}ms using ${weatherAPI}`);
+    
+    // If debug mode, return raw weather data without AI analysis
+    if (debug) {
+      console.log(`[Weather API] Debug mode - returning raw weather data only (no AI tokens used)`);
+      return Response.json({
+        weather: weatherData,
+        debug: true,
+        api: weatherAPI,
+        totalTime: fetchTime,
+        serverToday: getLocalDateString(),
+        serverTimezone: new Date().getTimezoneOffset(),
+        serverTime: new Date().toString()
+      });
+    }
+    
+    // Get AI advice from OpenAI (only in non-debug mode)
+    console.log('[Weather API] Requesting AI watering advice...');
+    const aiStartTime = Date.now();
+    
+    // Get both the 7-day schedule and today's specific recommendation in one call
     const advice = await getAIWateringAdvice(weatherData);
+    
+    const aiTime = Date.now() - aiStartTime;
+    console.log(`[Weather API] AI advice generated in ${aiTime}ms`);
 
+    console.log(`[Weather API] Request completed successfully - Total time: ${Date.now() - startTime}ms`);
     return Response.json({
       weather: weatherData,
-      advice: advice
+      advice: advice.weeklyAdvice,
+      todayAdvice: advice.todayAdvice
     });
   } catch (error) {
-    console.error('Error generating weather advice:', error);
+    console.error('[Weather API] Error generating weather advice:', error.message || error);
+    console.error('[Weather API] Full error stack:', error.stack);
     return Response.json({ error: error.message || 'Failed to generate weather advice' }, { status: 500 });
   }
 }
 
-async function fetchOpenWeatherData(zipCode) {
-  const API_KEY = process.env.OPENWEATHER_API_KEY;
-  
-  if (!API_KEY) {
-    throw new Error('OpenWeatherMap API key not configured');
-  }
-
-  // First, get coordinates from zip code
-  const geoResponse = await fetch(
-    `https://api.openweathermap.org/geo/1.0/zip?zip=${zipCode},US&appid=${API_KEY}`
-  );
-  
-  if (!geoResponse.ok) {
-    throw new Error('Invalid ZIP code or failed to fetch location data', geoResponse);
-  }
-  
-  const geoData = await geoResponse.json();
-  const { lat, lon } = geoData;
-
-  // Get 5-day forecast in imperial units (Fahrenheit)
-  const forecastResponse = await fetch(
-    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`
-  );
-  
-  if (!forecastResponse.ok) {
-    throw new Error('Failed to fetch weather forecast');
-  }
-  
-  const forecastData = await forecastResponse.json();
-  
-  // Process the forecast data to get daily summaries
-  const dailyData = processForecastData(forecastData);
-  
-  return dailyData;
-}
-
-function processForecastData(forecastData) {
-  const dailyMap = new Map();
-  
-  forecastData.list.forEach(item => {
-    const forecastDate = new Date(item.dt * 1000);
-    const date = forecastDate.toDateString();
-    
-    // Use local timezone for date formatting instead of UTC
-    const localDateString = new Date(forecastDate.getTime() - (forecastDate.getTimezoneOffset() * 60000))
-      .toISOString().split('T')[0];
-    
-    if (!dailyMap.has(date)) {
-      dailyMap.set(date, {
-        date: localDateString,
-        temp_max: item.main.temp_max,
-        temp_min: item.main.temp_min,
-        humidity: item.main.humidity,
-        description: item.weather[0].description,
-        rain: item.rain ? (item.rain['3h'] || 0) / 25.4 : 0, // Convert mm to inches
-        readings: 1
-      });
-    } else {
-      const existing = dailyMap.get(date);
-      existing.temp_max = Math.max(existing.temp_max, item.main.temp_max);
-      existing.temp_min = Math.min(existing.temp_min, item.main.temp_min);
-      existing.humidity = (existing.humidity + item.main.humidity) / 2;
-      existing.rain += item.rain ? (item.rain['3h'] || 0) / 25.4 : 0;
-      existing.readings += 1;
-    }
-  });
-  
-  return Array.from(dailyMap.values()).slice(0, 7); // Return first 7 days
-}
-
-async function fetchNWSWeatherData(zipCode) {
-  try {
-    // First, get coordinates from zip code using a geocoding service
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
-
-    // Get NWS office and grid coordinates
-    const pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
-    if (!pointsResponse.ok) {
-      throw new Error('Failed to get NWS grid information');
-    }
-    
-    const pointsData = await pointsResponse.json();
-    const forecastUrl = pointsData.properties.forecast;
-
-    // Get forecast data
-    const forecastResponse = await fetch(forecastUrl);
-    if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch NWS forecast');
-    }
-    
-    const forecastData = await forecastResponse.json();
-    
-    // Process NWS forecast data
-    const dailyData = processNWSForecastData(forecastData);
-    
-    return dailyData;
-  } catch (error) {
-    console.error('NWS API error:', error);
-    throw new Error(`NWS API failed: ${error.message}`);
-  }
-}
-
-function processNWSForecastData(forecastData) {
-  const dailyMap = new Map();
-  
-  // NWS provides periods (day/night) instead of hourly data
-  forecastData.properties.periods.forEach(period => {
-    const periodDate = new Date(period.startTime);
-    // Use local timezone for date formatting instead of UTC
-    const date = new Date(periodDate.getTime() - (periodDate.getTimezoneOffset() * 60000))
-      .toISOString().split('T')[0];
-    
-    if (!dailyMap.has(date)) {
-      dailyMap.set(date, {
-        date: date,
-        temp_max: period.temperature,
-        temp_min: period.temperature,
-        humidity: 50, // NWS doesn't provide humidity in basic forecast, using default
-        description: period.shortForecast.toLowerCase(),
-        rain: period.shortForecast.toLowerCase().includes('rain') ? 0.1 : 0, // Estimate rain
-        isDaytime: period.isDaytime
-      });
-    } else {
-      const existing = dailyMap.get(date);
-      if (period.isDaytime) {
-        existing.temp_max = Math.max(existing.temp_max, period.temperature);
-      } else {
-        existing.temp_min = Math.min(existing.temp_min, period.temperature);
-      }
-      // Update description to include both day and night info
-      if (!existing.description.includes(period.shortForecast.toLowerCase())) {
-        existing.description += `, ${period.shortForecast.toLowerCase()}`;
-      }
-      // Update rain estimate
-      if (period.shortForecast.toLowerCase().includes('rain') || 
-          period.shortForecast.toLowerCase().includes('showers')) {
-        existing.rain = Math.max(existing.rain, 0.1);
-      }
-    }
-  });
-  
-  return Array.from(dailyMap.values()).slice(0, 7); // Return first 7 days
-}
-
-async function fetchOpenMeteoWeatherData(zipCode) {
-  try {
-    // First, get coordinates from zip code using a geocoding service
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
-
-    // Get 7-day forecast from Open-Meteo
-    const forecastResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York&past_days=0&forecast_days=7`
-    );
-    
-    if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch Open-Meteo forecast');
-    }
-    
-    const forecastData = await forecastResponse.json();
-    
-    // Process Open-Meteo forecast data
-    const dailyData = processOpenMeteoForecastData(forecastData);
-    
-    return dailyData;
-  } catch (error) {
-    console.error('Open-Meteo API error:', error);
-    throw new Error(`Open-Meteo API failed: ${error.message}`);
-  }
-}
-
-function processOpenMeteoForecastData(forecastData) {
-  const daily = forecastData.daily;
-  const dailyData = [];
-  
-  for (let i = 0; i < daily.time.length && i < 7; i++) {
-    const date = daily.time[i]; // Already in YYYY-MM-DD format
-    
-    dailyData.push({
-      date: date,
-      temp_max: daily.temperature_2m_max[i] || 70,
-      temp_min: daily.temperature_2m_min[i] || 50,
-      humidity: daily.relative_humidity_2m[i] || 50,
-      description: daily.precipitation_sum[i] > 0.1 ? 'light rain' : 'partly cloudy',
-      rain: daily.precipitation_sum[i] || 0
-    });
-  }
-  
-  return dailyData;
-}
-
-async function fetchVisualCrossingWeatherData(zipCode) {
-  try {
-    // Visual Crossing API requires an API key - for demo purposes, we'll use a similar approach to Open-Meteo
-    // In production, you'd need to set VISUAL_CROSSING_API_KEY environment variable
-    const API_KEY = process.env.VISUAL_CROSSING_API_KEY || 'demo'; // Demo key for testing
-    
-    // First, get coordinates from zip code
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
-
-    // Get 7-day forecast from Visual Crossing
-    const forecastResponse = await fetch(
-      `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${lat},${lon}/next7days?unitGroup=us&key=${API_KEY}&contentType=json&include=days`
-    );
-    
-    if (!forecastResponse.ok) {
-      // Fallback to demo data if API key is not valid
-      return generateDemoWeatherData();
-    }
-    
-    const forecastData = await forecastResponse.json();
-    
-    // Process Visual Crossing forecast data
-    const dailyData = processVisualCrossingForecastData(forecastData);
-    
-    return dailyData;
-  } catch (error) {
-    console.error('Visual Crossing API error:', error);
-    // Return demo data as fallback
-    return generateDemoWeatherData();
-  }
-}
-
-function processVisualCrossingForecastData(forecastData) {
-  const dailyData = [];
-  
-  for (let i = 0; i < forecastData.days.length && i < 7; i++) {
-    const day = forecastData.days[i];
-    
-    dailyData.push({
-      date: day.datetime, // Already in YYYY-MM-DD format
-      temp_max: day.tempmax || 70,
-      temp_min: day.tempmin || 50,
-      humidity: day.humidity || 50,
-      description: day.conditions?.toLowerCase() || 'partly cloudy',
-      rain: (day.precip || 0) // Already in inches
-    });
-  }
-  
-  return dailyData;
-}
-
-function generateDemoWeatherData() {
-  const today = new Date();
-  const dailyData = [];
-  
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    const dateString = date.toISOString().split('T')[0];
-    
-    // Generate some demo weather data
-    const baseTemp = 70 + Math.sin(i * 0.5) * 10;
-    const rain = Math.random() > 0.7 ? Math.random() * 0.5 : 0;
-    
-    dailyData.push({
-      date: dateString,
-      temp_max: Math.round(baseTemp + 10),
-      temp_min: Math.round(baseTemp - 10),
-      humidity: Math.round(40 + Math.random() * 40),
-      description: rain > 0.1 ? 'light rain' : 'partly cloudy',
-      rain: rain
-    });
-  }
-  
-  return dailyData;
-}
 
 async function getAIWateringAdvice(weatherData) {
+  console.log('[AI Advice] Starting AI watering advice generation');
+  console.log(`[AI Advice] Weather data contains ${weatherData.length} days of data`);
+  
   if (!process.env.OPENAI_API_KEY) {
+    console.error('[AI Advice] OpenAI API key not configured');
     throw new Error('OpenAI API key not configured');
   }
 
@@ -348,89 +112,137 @@ const daily = weatherData.map(d => ({
   
   /* ---------- build INPUT objects ---------- */
 /* ---------- INPUT objects ---------- */
-const weather = weatherData.map(d => ({
-    d:  d.date,                      // YYYY-MM-DD
-    hi: Math.round(d.temp_max),      // °F high
-    lo: Math.round(d.temp_min),      // °F low
-    rain: +d.rain.toFixed(2),        // inches today
-    rainPast3: 0                     // 3-day running total incl. today
-  }));
-  weather.forEach((d,i)=>{ d.rainPast3 = +weather
-    .slice(Math.max(0,i-2), i+1)
-    .reduce((s,x)=>s+x.rain,0).toFixed(2);
-  });
+// const weather = weatherData.map(d => ({
+//     d:  d.date,                      // YYYY-MM-DD
+//     hi: Math.round(d.temp_max),      // °F high
+//     lo: Math.round(d.temp_min),      // °F low
+//     rain: +d.rain.toFixed(2),        // inches today
+//     rainPast3: 0                     // 3-day running total incl. today
+//   }));
+//   weather.forEach((d,i)=>{ d.rainPast3 = +weather
+//     .slice(Math.max(0,i-2), i+1)
+//     .reduce((s,x)=>s+x.rain,0).toFixed(2);
+//   });
   
-  const rules = {
-    hot: 85,          // hi ≥ hot triggers earlier watering
-    cool: 70,
-    rainSkip: 0.5,    // skip if rain ≥ …
-    rainSkip3: 1.0,   // skip if rainPast3 ≥ …
-    maxDays: 3,       // max “yes” per week
-    minGap: 1         // no consecutive “yes”
-  };
+//   const rules = {
+//     hot: 85,          // hi ≥ hot triggers earlier watering
+//     cool: 70,
+//     rainSkip: 0.5,    // skip if rain ≥ …
+//     rainSkip3: 1.0,   // skip if rainPast3 ≥ …
+//     maxDays: 3,       // max “yes” per week
+//     minGap: 1         // no consecutive “yes”
+//   };
+
+function buildWeather(data) {
+    // data = [{date, temp_max, temp_min, rain}, …] oldest→newest
+    const w = data.map(d => ({
+      d:  d.date,
+      hi: Math.round(d.temp_max),
+      lo: Math.round(d.temp_min),
+      rain: +d.rain.toFixed(2),   // today’s rain
+      rainPast3: 0,
+      hiNext3:   0,
+      rainNext3: 0
+    }));
+  
+    // compute rolling sums & forward-looking metrics
+    for (let i = 0; i < w.length; i++) {
+      // ─── rainPast3 ───
+      const past3 = w.slice(Math.max(0, i - 2), i + 1);
+      w[i].rainPast3 = +past3.reduce((s, x) => s + x.rain, 0).toFixed(2);
+  
+      // ─── next-3-day aggregates ───
+      const next3 = w.slice(i, i + 3);
+      w[i].hiNext3   = Math.round(next3.reduce((s, x) => s + x.hi, 0) / next3.length);
+      w[i].rainNext3 = +next3.reduce((s, x) => s + x.rain, 0).toFixed(2);
+    }
+    return w;
+  }
+  
+  const weather = buildWeather(weatherData);   // ← ready for prompt
   
   
-  /* ---------- PROMPT ---------- */
-  const prompt =
-`
-SYSTEM: You are a master vegetable gardener. Think step-by-step but **only return JSON**.
+  /* ---------- ENHANCED PROMPT FOR BOTH WEEKLY AND TODAY ---------- */
+  const today = getLocalDateString(); // YYYY-MM-DD format in local timezone
 
-TASK  For each day decide watering. Process the list in order; maintain this state:
-  state = { lastYesDate: null, yesThisWeek: 0 }
+  const prompt = `
+  # =====================  SYSTEM MESSAGE  =====================
+You are a master vegetable-garden planner.  
+Return **valid JSON only** – no prose outside JSON.
 
-  When you decide "yes":
-  • state.lastYesDate = current date
-  • state.yesThisWeek += 1
+# ======================  USER MESSAGE  ======================
+# Context
+• Today : ${today}
 
-DATA  ${JSON.stringify(weather)}
-RULES ${JSON.stringify(rules)}
+# Input  (chronological array, past → future)
+${JSON.stringify(weather)}
+Return exactly one “daily” object for **every** element in the input array.
 
-FIELD GLOSSARY
-d=date, hi/day-high°F, lo/day-low°F, rain=today inches,
-rainPast3=sum inches today+previous 2 days (never future rain).
+Fields per day:  
+d, hi (°F max), lo (°F min), rain (in today),  
+rainPast3 (in last 3 days), hiNext3 (avg max next 3 days incl. today),  
+rainNext3 (total rain next 3 days incl. today)
 
-LOGIC
-1 Max ${rules.maxDays} yes per ISO-week (Mon-Sun).
-2 No yes if (today − lastYesDate) ≤ ${rules.minGap} days.
-3 Skip if rain ≥ ${rules.rainSkip} **OR** rainPast3 ≥ ${rules.rainSkip3}.
-4 Else yes when (hi ≥ ${rules.hot} OR rainPast3 < 0.2) AND rules 1-2 satisfied.
-5 Else maybe.
-6  Reason: Brief, user friendly explanation considering soil moisture, recent watering, and weather
-7 "weekSummary": "Brief overall recommendation for the week including total water needs"
+# Constants
+maxYesPerWeek = 3
+minGapDays    = 2
+rainSkip      = 0.30      # inches today
+rainSkip3     = 0.60      # inches past 3 days
+dryTrigger3   = 0.20
+hotWave       = 88        # °F average hiNext3 considered heat wave
+hotDay        = 85
+warmDay       = 80
+coolDay       = 75
 
-  IMPORTANT VEGETABLE GARDEN WATERING PRINCIPLES:
-  - Most vegetables need 1-1.5 inches of water per week (including rainfall)
-  - Deep, infrequent watering (2-3 times per week) is better than daily shallow watering
-  - Deep watering encourages strong root development and drought resistance
-  - Daily watering creates shallow roots and weak plants
-  - Water early morning (6-10 AM) to reduce evaporation and disease
-  - Skip watering if soil is still moist from previous watering or recent rain
-  - Consider cumulative rainfall over 3-7 days, not just daily amounts
-  - Hot, windy days increase water needs; cool, humid days reduce them
+# Decision logic (first match wins)
+0  if rain ≥ rainSkip OR rainPast3 ≥ rainSkip3                → "no"
+1  if rainNext3 ≥ 0.30                                        → "no"
+2  if hiNext3  < 78                                           → "no"
+3  if weekYes ≥ maxYesPerWeek                                 → "no"
+4  if daysSinceLastYes ≤ minGapDays                           → "no"
+5  if hiNext3 ≥ hotWave AND rainNext3 < 0.20
+       AND rainPast3 < dryTrigger3                            → "yes"
+6  if hi ≥ hotDay AND rainPast3 < dryTrigger3                 → "yes"
+7  otherwise                                                  → "maybe"
 
-STRICT WATERING RULES TO FOLLOW:
-  1. NEVER recommend watering on consecutive days - always skip at least 1 day between waterings
-  2. Maximum 3 watering days per week, ideally 2 days per week
-  3. If today's rain >= 0.5" OR 3-day total rain >= 1.0" → wateringStatus = "no"
-  4. After any "yes" watering day, the next day must be "no" (minimum 1 day gap)
-  5. Ideal pattern: Water Monday, skip Tuesday, water Wednesday, skip Thursday/Friday, water Saturday, skip Sunday
-  6. Hot days (temp_max >= 85°F) may justify closer spacing but NEVER consecutive days
-  7. Cool days (temp_max < 70°F) should have 2-3 day gaps between watering
-  8. Each watering should be deep and thorough, not light surface watering
-  
-OUTPUT  valid JSON only:
+Process days in chronological order, maintaining:  
+state = { lastYesDate:null, weekYes:0 }  
+After a **"yes"**: lastYesDate = today, weekYes += 1  
+Reset weekYes when ISO-week changes.
+
+# Output (JSON only)
 {
- "weekSummary":"string",
- "dailyRecommendations":[
-   {"date":"YYYY-MM-DD","wateringStatus":"yes|maybe|no","reason":"string"}
- ]
-}`;   // keep tight, no blank lines
+  "weeklyAdvice": {
+    "weekSummary": "≤ 30 words summarising watering needs from ${today} through ${today}+7 days only (do NOT mention past days)",
+    "daily": [
+      // one object per element you sent in ${JSON.stringify(weather)},
+      // oldest → newest, including the 3 historic days
+      { "date":"YYYY-MM-DD", "wateringStatus":"yes|maybe|no", "reason":"≤ 20 words" }
+    ]
+  },
+  "todayAdvice": {
+    "shouldWater": "(copy wateringStatus for ${today})",
+    "confidence": "high|medium|low",
+    "reason": "≤ 40 words, expand today’s reason",
+    "soilMoisture": "likely dry|moderately moist|saturated",
+    "keyFactors": ["rainPast3","hiNext3","rainNext3","gap","weekly cap", …]
+  }
+}
+# ============================================================
+
+
+  `;
+   // keep tight, no blank lines
+
 
 try {
-const completion = await openai.chat.completions.create({
+  console.log('[AI Advice] Sending request to OpenAI API...');
+  console.log(`[AI Advice] Prompt length: ${prompt.length} characters`);
+  
+  const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.25,          // lower randomness = fewer surprises
-    max_tokens: 600,           // you can probably drop to 500 now
+    max_tokens: 800,           // increased for both responses
     messages: [
       { role: "system",
         content: "You are an expert vegetable-garden assistant. Reply with VALID JSON only." },
@@ -439,12 +251,53 @@ const completion = await openai.chat.completions.create({
     response_format: { type: "json_object" }
   });
 
-  return JSON.parse(completion.choices[0].message.content);
+  console.log(`[AI Advice] Received response from OpenAI. Usage - prompt tokens: ${completion.usage?.prompt_tokens}, completion tokens: ${completion.usage?.completion_tokens}`);
+  
+  const aiResponse = JSON.parse(completion.choices[0].message.content);
+  console.log(`[AI Advice] Generated advice for ${aiResponse.weeklyAdvice?.daily?.length || 0} days and today's assessment: ${aiResponse.todayAdvice?.shouldWater}`);
+  
+  return aiResponse;
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('[AI Advice] OpenAI API error:', error.message || error);
+    console.error('[AI Advice] Full error details:', error);
     throw new Error('Failed to get AI watering advice');
   }
 }
+
+
+// UNIFIED LOGIC (apply to BOTH 7-day schedule AND today's assessment):
+// 1 Max ${rules.maxDays} yes per ISO-week (Mon-Sun).
+// 2 No yes if (today − lastYesDate) ≤ ${rules.minGap} days.
+// 3 Skip if rain ≥ ${rules.rainSkip} **OR** rainPast3 ≥ ${rules.rainSkip3}.
+// 4 NEVER water if significant rain in past 24-48 hours (≥0.5" total)
+// 5 NEVER water if today's forecast shows ≥0.3" rain  
+// 6 Cool days (<75°F) with recent rain (≥0.3" in past 2 days) = definitely no watering
+// 7 Hot days (≥85°F) may justify watering ONLY if no recent rain AND rules 1-3 satisfied
+// 8 Else maybe (check soil moisture first)
+
+// IMPORTANT VEGETABLE GARDEN WATERING PRINCIPLES:
+// - Most vegetables need 1-1.5 inches of water per week (including rainfall)
+// - Deep, infrequent watering (2-3 times per week) is better than daily shallow watering
+// - Deep watering encourages strong root development and drought resistance
+// - Skip watering if soil is still moist from previous watering or recent rain
+// - Consider cumulative rainfall over 3-7 days, not just daily amounts
+// - Hot, windy days increase water needs; cool, humid days reduce them
+// - Recent heavy rain keeps soil moist for 2-3 days depending on temperature
+
+// STRICT WATERING RULES (MUST BE IDENTICAL FOR BOTH ANALYSES):
+// 1. NEVER recommend watering on consecutive days
+// 2. Maximum 3 watering days per week, ideally 2 days per week  
+// 3. If recent rain ≥ 0.5" in past 2 days → wateringStatus = "no" for that day
+// 4. After any "yes" watering day, next day must be "no" (minimum 1 day gap)
+// 5. Cool days (temp_max < 75°F) with recent rain (≥0.3" in past 2 days) = definitely "no"
+// 6. Each watering should be deep and thorough, not light surface watering
+
+// CONSISTENCY REQUIREMENT: 
+// - The "shouldWater" in todayAdvice MUST exactly match the "wateringStatus" for ${today} in daily
+// - If 7-day schedule says "no" for today, todayAdvice must say "no"  
+// - If 7-day schedule says "yes" for today, todayAdvice must say "yes"
+// - If 7-day schedule says "maybe" for today, todayAdvice must say "maybe"
+
 
 
 // ----------------------------------------

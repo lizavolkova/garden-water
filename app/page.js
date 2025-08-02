@@ -27,6 +27,12 @@ import {
   ToggleButtonGroup,
   IconButton,
   Tooltip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   SmartToy,
@@ -41,22 +47,37 @@ import {
   Settings,
   CloudQueue,
   Public,
+  BugReport,
 } from '@mui/icons-material';
+
+// Utility function to get local date in YYYY-MM-DD format (not UTC)
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function Home() {
   const [zipCode, setZipCode] = useState('');
   const [weatherData, setWeatherData] = useState(null);
   const [wateringAdvice, setWateringAdvice] = useState(null);
+  const [todayAdvice, setTodayAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [temperatureUnit, setTemperatureUnit] = useState('fahrenheit');
   const [weatherAPI, setWeatherAPI] = useState('openweather');
+  const [debugMode, setDebugMode] = useState(false);
 
   // Temperature utility functions
   const convertFahrenheitToCelsius = (fahrenheit) => {
     return (fahrenheit - 32) * 5 / 9;
   };
+  
+  useEffect(() => {
+    console.log("debugMode", debugMode);
+}, [debugMode]); // Dependency array ensures effect runs when myState changes
   
   const formatTemperature = (tempF, unit = temperatureUnit) => {
     if (unit === 'celsius') {
@@ -113,12 +134,13 @@ export default function Home() {
     }
   }, [getCacheKey]);
   
-  const setCachedData = useCallback((zipCode, weather, advice) => {
+  const setCachedData = useCallback((zipCode, weather, advice, todayAdvice = null) => {
     try {
       const cacheKey = getCacheKey(zipCode);
       const data = {
         weather,
         advice,
+        todayAdvice,
         timestamp: Date.now(),
         zipCode
       };
@@ -133,12 +155,13 @@ export default function Home() {
     setError(null);
     
     try {
-      // Check cache first unless forcing refresh
-      if (!forceRefresh) {
+      // Check cache first unless forcing refresh or in debug mode
+      if (!forceRefresh && !debugMode) {
         const cachedData = getCachedData(zip);
         if (cachedData) {
           setWeatherData(cachedData.weather);
           setWateringAdvice(cachedData.advice);
+          setTodayAdvice(cachedData.todayAdvice || null);
           localStorage.setItem('gardenWateringZipCode', zip);
           setLoading(false);
           setInitialLoad(false);
@@ -147,7 +170,8 @@ export default function Home() {
       }
       
       // Fetch fresh data
-      const response = await fetch(`/api/weather-advice?zipCode=${zip}&weatherAPI=${weatherAPI}`);
+      const debugParam = debugMode ? '&debug=true' : '';
+      const response = await fetch(`/api/weather-advice?zipCode=${zip}&weatherAPI=${weatherAPI}${debugParam}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -155,10 +179,20 @@ export default function Home() {
       }
       
       setWeatherData(data.weather);
-      setWateringAdvice(data.advice);
       
-      // Save to cache and localStorage
-      setCachedData(zip, data.weather, data.advice);
+      // Only set advice data if not in debug mode
+      if (!data.debug) {
+        setWateringAdvice(data.advice);
+        setTodayAdvice(data.todayAdvice || null);
+        
+        // Save to cache and localStorage
+        setCachedData(zip, data.weather, data.advice, data.todayAdvice);
+      } else {
+        setWateringAdvice(null);
+        setTodayAdvice(null);
+        
+      }
+      
       localStorage.setItem('gardenWateringZipCode', zip);
     } catch (err) {
       setError(err.message);
@@ -166,7 +200,7 @@ export default function Home() {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [weatherAPI, getCachedData, setCachedData]);
+  }, [weatherAPI, debugMode, getCachedData, setCachedData]);
   
   // Load saved preferences on component mount
   useEffect(() => {
@@ -205,11 +239,10 @@ export default function Home() {
     }
   };
 
-  const handleWeatherAPIChange = (event, newAPI) => {
-    if (newAPI !== null) {
-      setWeatherAPI(newAPI);
-      saveWeatherAPIPreference(newAPI);
-    }
+  const handleWeatherAPIChange = (event) => {
+    const newAPI = event.target.value;
+    setWeatherAPI(newAPI);
+    saveWeatherAPIPreference(newAPI);
   };
 
   const formatDate = (dateString) => {
@@ -221,15 +254,19 @@ export default function Home() {
   };
 
   const isToday = (dateString) => {
-    const today = new Date();
-    const checkDate = new Date(dateString);
-    return today.toDateString() === checkDate.toDateString();
+    const today = getLocalDateString();
+    return today === dateString;
+  };
+
+  const isPastDate = (dateString) => {
+    const today = getLocalDateString();
+    return dateString < today;
   };
 
   const getTodaysRecommendation = () => {
-    if (!wateringAdvice?.dailyRecommendations) return null;
+    if (!wateringAdvice?.daily) return null;
     
-    return wateringAdvice.dailyRecommendations.find(day => isToday(day.date));
+    return wateringAdvice.daily.find(day => isToday(day.date));
   };
 
   const getWateringIcon = (shouldWater) => {
@@ -341,35 +378,58 @@ export default function Home() {
               />
               
               {/* Weather API Selection */}
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                  Weather Source
-                </Typography>
-                <ToggleButtonGroup
+              <FormControl sx={{ minWidth: 160 }}>
+                <InputLabel>Weather Source</InputLabel>
+                <Select
                   value={weatherAPI}
-                  exclusive
                   onChange={handleWeatherAPIChange}
+                  label="Weather Source"
                   size="small"
-                  sx={{ bgcolor: 'background.paper', borderRadius: 1, flexWrap: 'wrap' }}
                 >
-                  <ToggleButton value="openweather" sx={{ px: 1.5, minWidth: 'auto' }}>
-                    <CloudQueue sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>OpenWeather</Typography>
-                  </ToggleButton>
-                  <ToggleButton value="nws" sx={{ px: 1.5, minWidth: 'auto' }}>
-                    <Public sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>NWS</Typography>
-                  </ToggleButton>
-                  <ToggleButton value="openmeteo" sx={{ px: 1.5, minWidth: 'auto' }}>
-                    <WbSunny sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Open-Meteo</Typography>
-                  </ToggleButton>
-                  <ToggleButton value="visualcrossing" sx={{ px: 1.5, minWidth: 'auto' }}>
-                    <Cloud sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Visual Crossing</Typography>
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
+                  <MenuItem value="openweather">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <CloudQueue sx={{ fontSize: '1rem' }} />
+                      OpenWeather
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="nws">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Public sx={{ fontSize: '1rem' }} />
+                      NWS
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="openmeteo">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <WbSunny sx={{ fontSize: '1rem' }} />
+                      Open-Meteo
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="visualcrossing">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Cloud sx={{ fontSize: '1rem' }} />
+                      Visual Crossing
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              
+              {/* Debug Mode Toggle */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={debugMode}
+                    onChange={(e) => setDebugMode(e.target.checked)}
+                    color="warning"
+                  />
+                }
+                label={
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <BugReport sx={{ fontSize: '1rem' }} />
+                    <Typography variant="caption">Debug</Typography>
+                  </Box>
+                }
+                sx={{ minWidth: 'auto' }}
+              />
               
               <Button
                 variant="contained"
@@ -383,7 +443,7 @@ export default function Home() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {loading ? 'Analyzing...' : 'Get AI Advice'}
+{loading ? 'Fetching...' : debugMode ? 'Get Weather Data' : 'Get AI Advice'}
               </Button>
             </Box>
           </CardContent>
@@ -395,7 +455,224 @@ export default function Home() {
           </Alert>
         )}
 
-        {wateringAdvice && (
+        {todayAdvice && (
+          <Card sx={{ 
+            mb: 4, 
+            border: '2px solid', 
+            borderColor: todayAdvice.shouldWater === 'yes' ? 'info.main' : 
+                        todayAdvice.shouldWater === 'maybe' ? 'warning.main' : 'success.main',
+            background: todayAdvice.shouldWater === 'yes' ? 
+              'linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(25, 118, 210, 0.12) 100%)' : 
+              todayAdvice.shouldWater === 'maybe' ? 
+              'linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(245, 124, 0, 0.12) 100%)' : 
+              'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(56, 142, 60, 0.12) 100%)'
+          }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={3}>
+                <Avatar sx={{ 
+                  bgcolor: todayAdvice.shouldWater === 'yes' ? 'info.main' : 
+                           todayAdvice.shouldWater === 'maybe' ? 'warning.main' : 'success.main',
+                  width: 48, 
+                  height: 48 
+                }}>
+                  <WaterDrop />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" component="h2" color={
+                    todayAdvice.shouldWater === 'yes' ? 'info.main' : 
+                    todayAdvice.shouldWater === 'maybe' ? 'warning.main' : 'success.main'
+                  }>
+                    Should I Water Today?
+                  </Typography>
+                </Box>
+              </Box>
+              
+              {/* Main watering decision in prominent card */}
+              <Paper elevation={3} sx={{
+                p: 3,
+                mb: 3,
+                background: todayAdvice.shouldWater === 'yes' ? 
+                  'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(25, 118, 210, 0.25) 100%)' : 
+                  todayAdvice.shouldWater === 'maybe' ? 
+                  'linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(245, 124, 0, 0.25) 100%)' : 
+                  'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(56, 142, 60, 0.25) 100%)',
+                border: '2px solid',
+                borderColor: todayAdvice.shouldWater === 'yes' ? 'info.main' : 
+                            todayAdvice.shouldWater === 'maybe' ? 'warning.main' : 'success.main',
+                borderRadius: 3,
+                textAlign: 'center'
+              }}>
+                <Typography variant="h2" sx={{ 
+                  fontWeight: 700, 
+                  fontSize: { xs: '1.75rem', sm: '2.25rem' },
+                  mb: 2,
+                  color: todayAdvice.shouldWater === 'yes' ? 'info.dark' : 
+                         todayAdvice.shouldWater === 'maybe' ? 'warning.dark' : 'success.dark'
+                }}>
+                  {todayAdvice.shouldWater === 'yes' ? '💧 Yes, Water Today' : 
+                   todayAdvice.shouldWater === 'maybe' ? '🤔 Maybe Water Today' : 
+                   '🚫 No, Skip Watering Today'}
+                </Typography>
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 500,
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
+                  color: 'text.primary',
+                  lineHeight: 1.4
+                }}>
+                  {todayAdvice.reason}
+                </Typography>
+              </Paper>
+              
+              {todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
+                <Box mb={2}>
+                  <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                    Key factors considered:
+                  </Typography>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
+                    {todayAdvice.keyFactors.map((factor, index) => (
+                      <Chip 
+                        key={index} 
+                        label={factor} 
+                        size="small" 
+                        variant="outlined" 
+                        color="primary"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              
+              {/* Confidence level moved to bottom */}
+              <Box display="flex" justifyContent="center">
+                <Chip
+                  label={`${todayAdvice.confidence} confidence`}
+                  color={todayAdvice.confidence === 'high' ? 'success' : 
+                         todayAdvice.confidence === 'medium' ? 'warning' : 'default'}
+                  size="small"
+                  variant="outlined"
+                  sx={{ opacity: 0.6, fontSize: '0.7rem' }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+
+        {weatherData && debugMode && (
+          <Card sx={{ mb: 4, border: '2px solid', borderColor: 'warning.main' }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={3}>
+                <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56 }}>
+                  <BugReport fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="h2" component="h2" color="warning.main">
+                    Debug: Raw Weather Data
+                  </Typography>
+                  <Chip 
+                    label={`SOURCE: ${weatherAPI.toUpperCase()}`}
+                    color="warning" 
+                    variant="outlined" 
+                    size="small"
+                  />
+                </Box>
+              </Box>
+              
+              <TableContainer component={Paper} sx={{ mb: 2 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell><strong>Date</strong></TableCell>
+                      <TableCell align="center"><strong>High °F</strong></TableCell>
+                      <TableCell align="center"><strong>Low °F</strong></TableCell>
+                      <TableCell align="center"><strong>Humidity %</strong></TableCell>
+                      <TableCell align="center"><strong>Rain (inches)</strong></TableCell>
+                      <TableCell><strong>Description</strong></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {weatherData.map((day, index) => {
+                      const todayLocal = getLocalDateString();
+                      const isTodayRow = todayLocal === day.date;
+                      const isPast = new Date(day.date) < new Date(todayLocal);
+                      
+                      
+                      return (
+                        <TableRow 
+                          key={index}
+                          sx={{
+                            backgroundColor: isTodayRow ? 'primary.light' : isPast ? 'grey.100' : 'inherit',
+                            '& .MuiTableCell-root': {
+                              color: isTodayRow ? 'primary.contrastText' : 'inherit'
+                            }
+                          }}
+                        >
+                          <TableCell>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { 
+                                  weekday: 'short', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {day.date}
+                              </Typography>
+                              {isTodayRow && (
+                                <Chip label="TODAY" size="small" color="primary" sx={{ ml: 1, fontSize: '0.6rem', height: 16 }} />
+                              )}
+                              {isPast && (
+                                <Chip label="PAST" size="small" color="default" sx={{ ml: 1, fontSize: '0.6rem', height: 16 }} />
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" fontWeight={600}>
+                              {Math.round(day.temp_max)}°
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2">
+                              {Math.round(day.temp_min)}°
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2">
+                              {day.humidity}%
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography 
+                              variant="body2" 
+                              color={day.rain > 0.1 ? 'info.main' : 'text.secondary'}
+                              fontWeight={day.rain > 0.1 ? 600 : 400}
+                            >
+                              {day.rain.toFixed(2)}"
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                              {day.description}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  <strong>Debug Mode:</strong> Showing raw weather data from {weatherAPI} API without AI analysis. 
+                  Turn off debug mode to get watering recommendations.
+                </Typography>
+              </Alert>
+            </CardContent>
+          </Card>
+        )}
+
+        {wateringAdvice && !debugMode && (
           <Card sx={{ mb: 4 }}>
             <CardContent sx={{ p: 4 }}>
               <Box display="flex" alignItems="center" gap={2} mb={3}>
@@ -414,127 +691,6 @@ export default function Home() {
                   />
                 </Box>
               </Box>
-              
-              {/* Today's Action Card */}
-              {(() => {
-                const todaysRec = getTodaysRecommendation();
-                if (!todaysRec) return null;
-                
-                const todaysWeather = getWeatherDisplay(todaysRec.date);
-                
-                // Get watering status
-                let status, color, icon;
-                if (todaysRec.wateringStatus) {
-                  status = todaysRec.wateringStatus;
-                } else {
-                  // Backward compatibility
-                  if (todaysRec.shouldWater) {
-                    if (todaysRec.priority === 'high' || todaysRec.wateringAmount === 'heavy') {
-                      status = 'yes';
-                    } else if (todaysRec.priority === 'medium' || todaysRec.wateringAmount === 'moderate') {
-                      status = 'maybe';
-                    } else {
-                      status = 'yes';
-                    }
-                  } else {
-                    status = 'no';
-                  }
-                }
-                
-                let chipStyles = {};
-                switch (status) {
-                  case 'yes':
-                    color = 'info'; // We'll override this with custom styles
-                    icon = <WaterDrop />;
-                    chipStyles = {
-                      background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                      color: 'white',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
-                      }
-                    };
-                    break;
-                  case 'maybe':
-                    color = 'warning'; // We'll override this with custom styles
-                    icon = <WaterDrop />;
-                    chipStyles = {
-                      background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
-                      color: 'white',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #F57C00 0%, #E65100 100%)',
-                      }
-                    };
-                    break;
-                  case 'no':
-                    color = 'success'; // We'll override this with custom styles
-                    icon = <Block />;
-                    chipStyles = {
-                      background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
-                      color: 'white',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #388E3C 0%, #2E7D32 100%)',
-                      }
-                    };
-                    break;
-                  default:
-                    color = 'default';
-                    icon = <Block />;
-                    status = 'no';
-                    chipStyles = {
-                      background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
-                      color: 'white',
-                    };
-                }
-
-                return (
-                  <Card sx={{ mb: 4, border: '3px solid', borderColor: 'primary.main', backgroundColor: 'primary.light' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h5" component="h3" gutterBottom sx={{ fontWeight: 700, color: 'primary.dark' }}>
-                        🌱 Today's Garden Action
-                      </Typography>
-                      
-                      <Box display="flex" alignItems="center" gap={3} sx={{ mb: 2 }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                          <Typography variant="h6" fontWeight={600}>
-                            {formatDate(todaysRec.date)}
-                          </Typography>
-                          {todaysWeather && (
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
-                                {todaysWeather.icon}
-                              </Typography>
-                              <Typography variant="body1" fontWeight={600}>
-                                {todaysWeather.temp}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                        
-                        <Box sx={{ flex: 1 }} />
-                        
-                        <Chip
-                          icon={icon}
-                          label={`${status.charAt(0).toUpperCase() + status.slice(1)} Water`}
-                          size="large"
-                          sx={{ 
-                            fontWeight: 700, 
-                            fontSize: '1.1rem',
-                            height: 40,
-                            transform: 'scale(1.1)',
-                            boxShadow: 3,
-                            ...chipStyles
-                          }}
-                        />
-                      </Box>
-                      
-                      <Typography variant="body1" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        {todaysRec.reason}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-              
               <Alert severity="info" sx={{ mb: 4 }}>
                 <Typography variant="h6" gutterBottom>
                   Weekly Overview
@@ -547,19 +703,20 @@ export default function Home() {
               {/* Desktop Table View */}
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                 <TableContainer component={Paper}>
-                  <Table>
+                  <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>📅 Date</TableCell>
-                        <TableCell align="center">🌤️ Weather</TableCell>
-                        <TableCell align="center">💧 Water?</TableCell>
-                        <TableCell>💭 Reasoning</TableCell>
+                        <TableCell sx={{ py: 1 }}>📅 Date</TableCell>
+                        <TableCell align="center" sx={{ py: 1 }}>🌤️ Weather</TableCell>
+                        <TableCell align="center" sx={{ py: 1 }}>💧 Water?</TableCell>
+                        <TableCell sx={{ py: 1 }}>💭 Reasoning</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {wateringAdvice.dailyRecommendations?.map((day, index) => {
+                      {wateringAdvice.daily?.map((day, index) => {
                         const weather = getWeatherDisplay(day.date);
                         const todayRow = isToday(day.date);
+                        const pastRow = isPastDate(day.date);
                         return (
                           <TableRow 
                             key={index} 
@@ -572,43 +729,53 @@ export default function Home() {
                               '& .MuiTableCell-root': {
                                 color: 'primary.contrastText',
                               }
+                            } : pastRow ? {
+                              backgroundColor: 'grey.100',
+                              opacity: 0.6,
+                              '& .MuiTableCell-root': {
+                                color: 'text.disabled',
+                              }
                             } : {}}
                           >
-                            <TableCell>
-                              <Typography component="div" variant="body2" fontWeight={600}>
+                            <TableCell sx={{ py: 1 }}>
+                              <Typography component="div" variant="body2" fontWeight={600} sx={{ fontSize: '0.875rem' }}>
                                 {formatDate(day.date)}
                                 {todayRow && (
                                   <Chip 
                                     label="TODAY" 
                                     size="small" 
                                     color="secondary"
-                                    sx={{ ml: 1, fontSize: '0.6rem', height: 20 }}
+                                    sx={{ ml: 1, fontSize: '0.6rem', height: 18 }}
                                   />
                                 )}
                               </Typography>
                             </TableCell>
-                            <TableCell align="center">
+                            <TableCell align="center" sx={{ py: 1 }}>
                               {weather && (
-                                <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
-                                  <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
+                                <Box display="flex" flexDirection="column" alignItems="center" gap={0.25}>
+                                  <Typography variant="h6" sx={{ fontSize: '1rem' }}>
                                     {weather.icon}
                                   </Typography>
-                                  <Typography variant="caption" fontWeight={600}>
+                                  <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.7rem' }}>
                                     {weather.temp}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary" textTransform="capitalize" sx={{ fontSize: '0.65rem', lineHeight: 1.1 }}>
+                                  <Typography variant="caption" color="text.secondary" textTransform="capitalize" sx={{ fontSize: '0.6rem', lineHeight: 1.1 }}>
                                     {weather.description}
                                   </Typography>
                                   {weather.rain && (
-                                    <Typography variant="caption" color="info.main" sx={{ fontSize: '0.65rem' }}>
+                                    <Typography variant="caption" color="info.main" sx={{ fontSize: '0.6rem' }}>
                                       {weather.rain} rain
                                     </Typography>
                                   )}
                                 </Box>
                               )}
                             </TableCell>
-                            <TableCell align="center">
-                              {(() => {
+                            <TableCell align="center" sx={{ py: 1 }}>
+                              {pastRow ? (
+                                <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.75rem' }}>
+                                  Past
+                                </Typography>
+                              ) : (() => {
                                 // Handle new API format with wateringStatus
                                 let status, color, icon;
                                 
@@ -675,8 +842,8 @@ export default function Home() {
                                 );
                               })()}
                             </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" color="text.secondary">
+                            <TableCell sx={{ py: 1 }}>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', lineHeight: 1.3 }}>
                                 {day.reason}
                               </Typography>
                             </TableCell>
@@ -690,65 +857,68 @@ export default function Home() {
 
               {/* Mobile Card View */}
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                {wateringAdvice.dailyRecommendations?.map((day, index) => {
+                {wateringAdvice.daily?.map((day, index) => {
                   const weather = getWeatherDisplay(day.date);
+                  const todayCard = isToday(day.date);
+                  const pastCard = isPastDate(day.date);
                   
-                  // Get watering status for mobile display
+                  // Get watering status for mobile display (only for non-past days)
                   let status, color, icon;
-                  if (day.wateringStatus) {
-                    status = day.wateringStatus;
-                  } else {
-                    // Backward compatibility
-                    if (day.shouldWater) {
-                      if (day.priority === 'high' || day.wateringAmount === 'heavy') {
-                        status = 'yes';
-                      } else if (day.priority === 'medium' || day.wateringAmount === 'moderate') {
-                        status = 'maybe';
-                      } else {
-                        status = 'yes';
-                      }
+                  let mobileChipStyles = {};
+                  
+                  if (!pastCard) {
+                    if (day.wateringStatus) {
+                      status = day.wateringStatus;
                     } else {
-                      status = 'no';
+                      // Backward compatibility
+                      if (day.shouldWater) {
+                        if (day.priority === 'high' || day.wateringAmount === 'heavy') {
+                          status = 'yes';
+                        } else if (day.priority === 'medium' || day.wateringAmount === 'moderate') {
+                          status = 'maybe';
+                        } else {
+                          status = 'yes';
+                        }
+                      } else {
+                        status = 'no';
+                      }
+                    }
+                    
+                    switch (status) {
+                      case 'yes':
+                        color = 'info';
+                        icon = <WaterDrop />;
+                        mobileChipStyles = {
+                          background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                          color: 'white',
+                        };
+                        break;
+                      case 'maybe':
+                        color = 'warning';
+                        icon = <WaterDrop />;
+                        mobileChipStyles = {
+                          background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
+                          color: 'white',
+                        };
+                        break;
+                      case 'no':
+                        color = 'success';
+                        icon = <Block />;
+                        mobileChipStyles = {
+                          background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
+                          color: 'white',
+                        };
+                        break;
+                      default:
+                        color = 'default';
+                        icon = <Block />;
+                        status = 'no';
+                        mobileChipStyles = {
+                          background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
+                          color: 'white',
+                        };
                     }
                   }
-                  
-                  let mobileChipStyles = {};
-                  switch (status) {
-                    case 'yes':
-                      color = 'info';
-                      icon = <WaterDrop />;
-                      mobileChipStyles = {
-                        background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                        color: 'white',
-                      };
-                      break;
-                    case 'maybe':
-                      color = 'warning';
-                      icon = <WaterDrop />;
-                      mobileChipStyles = {
-                        background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
-                        color: 'white',
-                      };
-                      break;
-                    case 'no':
-                      color = 'success';
-                      icon = <Block />;
-                      mobileChipStyles = {
-                        background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
-                        color: 'white',
-                      };
-                      break;
-                    default:
-                      color = 'default';
-                      icon = <Block />;
-                      status = 'no';
-                      mobileChipStyles = {
-                        background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
-                        color: 'white',
-                      };
-                  }
-
-                  const todayCard = isToday(day.date);
                   
                   return (
                     <Paper 
@@ -758,14 +928,15 @@ export default function Home() {
                         mb: 2, 
                         border: todayCard ? '3px solid' : '2px solid transparent',
                         borderColor: todayCard ? 'primary.main' : 'transparent',
-                        backgroundColor: todayCard ? 'primary.light' : 'background.paper',
+                        backgroundColor: todayCard ? 'primary.light' : pastCard ? 'grey.100' : 'background.paper',
                         boxShadow: todayCard ? 4 : 1,
+                        opacity: pastCard ? 0.6 : 1,
                       }}
                     >
                       {/* Header Row: Date and Watering Status */}
                       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <Typography component="div" variant="body2" fontWeight={600} color="text.secondary" sx={{ fontSize: '16px' }}>
+                          <Typography component="div" variant="body2" fontWeight={600} color={pastCard ? "text.disabled" : "text.secondary"} sx={{ fontSize: '16px' }}>
                             {formatDate(day.date)}
                           </Typography>
                           {todayCard && (
@@ -778,20 +949,26 @@ export default function Home() {
                             />
                           )}
                         </Box>
-                        <Chip
-                          icon={icon}
-                          label={status.charAt(0).toUpperCase() + status.slice(1)}
-                          size={todayCard ? "large" : "medium"}
-                          sx={{ 
-                            fontWeight: 600, 
-                            fontSize: todayCard ? '1rem' : '0.875rem',
-                            ...mobileChipStyles,
-                            ...(todayCard && {
-                              boxShadow: 2,
-                              transform: 'scale(1.05)'
-                            })
-                          }}
-                        />
+                        {pastCard ? (
+                          <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.875rem' }}>
+                            Past
+                          </Typography>
+                        ) : (
+                          <Chip
+                            icon={icon}
+                            label={status.charAt(0).toUpperCase() + status.slice(1)}
+                            size={todayCard ? "large" : "medium"}
+                            sx={{ 
+                              fontWeight: 600, 
+                              fontSize: todayCard ? '1rem' : '0.875rem',
+                              ...mobileChipStyles,
+                              ...(todayCard && {
+                                boxShadow: 2,
+                                transform: 'scale(1.05)'
+                              })
+                            }}
+                          />
+                        )}
                       </Box>
                       
                       {/* Content Row: Weather and Reasoning */}
@@ -816,191 +993,9 @@ export default function Home() {
                         )}
                         
                         {/* Reasoning */}
-                        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, fontSize: '0.8rem', lineHeight: 1.3 }}>
+                        <Typography variant="body2" color={pastCard ? "text.disabled" : "text.secondary"} sx={{ flex: 1, fontSize: '0.8rem', lineHeight: 1.3 }}>
                           {day.reason}
                         </Typography>
-                      </Box>
-                    </Paper>
-                  );
-                })}
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-
-        {weatherData && (
-          <Card>
-            <CardContent sx={{ p: 4 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={4}>
-                <Avatar sx={{ bgcolor: 'secondary.main', width: 56, height: 56 }}>
-                  <WbSunny fontSize="large" />
-                </Avatar>
-                <Box>
-                  <Typography variant="h2" component="h2">
-                    Weather Forecast
-                  </Typography>
-                  <Chip 
-                    label="7-DAY OUTLOOK" 
-                    color="secondary" 
-                    variant="outlined" 
-                    size="small"
-                  />
-                </Box>
-              </Box>
-              
-              {/* Desktop: Horizontal scroll, Mobile: Grid layout */}
-              <Box 
-                sx={{ 
-                  // Desktop layout (horizontal scroll)
-                  display: { xs: 'none', sm: 'flex' },
-                  gap: 2, 
-                  overflowX: 'auto',
-                  pb: 1,
-                  '&::-webkit-scrollbar': {
-                    height: 8,
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderRadius: 4,
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'primary.main',
-                    borderRadius: 4,
-                  }
-                }}
-              >
-                {weatherData.map((day, index) => {
-                  const getWeatherIcon = () => {
-                    if (day.description.includes('rain')) return <Umbrella />;
-                    if (day.description.includes('cloud')) return <Cloud />;
-                    if (day.description.includes('clear')) return <WbSunny />;
-                    return <WbSunny />;
-                  };
-
-                  return (
-                    <Paper 
-                      key={index}
-                      elevation={1} 
-                      sx={{ 
-                        minWidth: 160,
-                        width: 160,
-                        height: 200,
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        textAlign: 'center',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          elevation: 4,
-                        }
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={600} color="text.secondary">
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </Typography>
-                      
-                      <Avatar sx={{ bgcolor: 'primary.light', width: 48, height: 48, mb: 1 }}>
-                        {getWeatherIcon()}
-                      </Avatar>
-                      
-                      <Typography variant="body2" color="text.secondary" textTransform="capitalize" sx={{ fontSize: '0.75rem', lineHeight: 1.2, mb: 1 }}>
-                        {day.description}
-                      </Typography>
-                      
-                      <Box>
-                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1rem' }}>
-                          {formatTemperature(day.temp_max)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                          {formatTemperature(day.temp_min)}
-                        </Typography>
-                      </Box>
-                      
-                      <Box display="flex" flexDirection="column" gap={0.5}>
-                        <Typography variant="caption" color="text.secondary">
-                          {day.humidity}% humidity
-                        </Typography>
-                        {day.rain > 0 && (
-                          <Typography variant="caption" color="info.main">
-                            {day.rain.toFixed(1)} rain
-                          </Typography>
-                        )}
-                      </Box>
-                    </Paper>
-                  );
-                })}
-              </Box>
-
-              {/* Mobile: Vertical stack layout */}
-              <Box 
-                sx={{ 
-                  display: { xs: 'block', sm: 'none' },
-                  gap: 2
-                }}
-              >
-                {weatherData.map((day, index) => {
-                  const getWeatherIcon = () => {
-                    if (day.description.includes('rain')) return <Umbrella />;
-                    if (day.description.includes('cloud')) return <Cloud />;
-                    if (day.description.includes('clear')) return <WbSunny />;
-                    return <WbSunny />;
-                  };
-
-                  return (
-                    <Paper 
-                      key={`mobile-${index}`}
-                      elevation={1} 
-                      sx={{ 
-                        p: 2,
-                        mb: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          elevation: 2,
-                        }
-                      }}
-                    >
-                      {/* Date */}
-                      <Box sx={{ minWidth: 80 }}>
-                        <Typography variant="body2" fontWeight={600} color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                          {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Weather Icon */}
-                      <Avatar sx={{ bgcolor: 'primary.light', width: 36, height: 36 }}>
-                        {getWeatherIcon()}
-                      </Avatar>
-                      
-                      {/* Temperature */}
-                      <Box sx={{ minWidth: 60 }}>
-                        <Typography variant="body1" fontWeight={600} sx={{ fontSize: '0.9rem' }}>
-                          {formatTemperature(day.temp_max)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                          {formatTemperature(day.temp_min)}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Description and Details */}
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" color="text.primary" textTransform="capitalize" sx={{ fontSize: '0.8rem', lineHeight: 1.2, mb: 0.5 }}>
-                          {day.description}
-                        </Typography>
-                        <Box display="flex" gap={2}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                            {day.humidity}% humidity
-                          </Typography>
-                          {day.rain > 0 && (
-                            <Typography variant="caption" color="info.main" sx={{ fontSize: '0.7rem' }}>
-                              {day.rain.toFixed(1)} rain
-                            </Typography>
-                          )}
-                        </Box>
                       </Box>
                     </Paper>
                   );
