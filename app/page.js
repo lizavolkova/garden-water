@@ -300,7 +300,7 @@ export default function Home() {
       icon: getWeatherIcon(),
       temp: `${formatTemperature(weatherDay.temp_max)}/${formatTemperature(weatherDay.temp_min)}`,
       description: weatherDay.description,
-      rain: weatherDay.rain > 0 ? `${weatherDay.rain.toFixed(1)}"` : null
+      rain: weatherDay.rain > 0 ? `${weatherDay.rain.toFixed(1)}&quot;` : null
     };
   };
 
@@ -663,7 +663,7 @@ export default function Home() {
                               color={day.rain > 0.1 ? 'info.main' : 'text.secondary'}
                               fontWeight={day.rain > 0.1 ? 600 : 400}
                             >
-                              {day.rain.toFixed(2)}"
+                              {day.rain.toFixed(2)}&quot;
                             </Typography>
                           </TableCell>
                           <TableCell>
