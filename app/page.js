@@ -67,8 +67,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [temperatureUnit, setTemperatureUnit] = useState('fahrenheit');
-  const [weatherAPI, setWeatherAPI] = useState('openweather');
+  const [weatherAPI, setWeatherAPI] = useState('visualcrossing');
   const [debugMode, setDebugMode] = useState(false);
+  const [isDebugMode, setIsDebugMode] = useState(false);
 
   // Temperature utility functions
   const convertFahrenheitToCelsius = (fahrenheit) => {
@@ -101,7 +102,7 @@ export default function Home() {
   };
   
   const loadWeatherAPIPreference = () => {
-    return localStorage.getItem('gardenWateringWeatherAPI') || 'openweather';
+    return localStorage.getItem('gardenWateringWeatherAPI') || 'visualcrossing';
   };
 
   // Cache utility functions
@@ -116,13 +117,10 @@ export default function Home() {
       const data = JSON.parse(cached);
       const now = Date.now();
       const cacheAge = now - data.timestamp;
-      const twentyFourHours = 24 * 60 * 60 * 1000;
+      const twelveHours = 12 * 60 * 60 * 1000;
       
-      // Check if cache is older than 24 hours OR if it's from a different day
-      const cacheDate = new Date(data.timestamp).toDateString();
-      const todayDate = new Date().toDateString();
-      
-      if (cacheAge > twentyFourHours || cacheDate !== todayDate) {
+      // Check if cache is older than 12 hours
+      if (cacheAge > twelveHours) {
         localStorage.removeItem(cacheKey);
         return null;
       }
@@ -202,19 +200,30 @@ export default function Home() {
     }
   }, [weatherAPI, debugMode, getCachedData, setCachedData]);
   
-  // Load saved preferences on component mount
+  // Load saved preferences and check URL params on component mount
   useEffect(() => {
     const savedTempUnit = loadTemperaturePreference();
     const savedWeatherAPI = loadWeatherAPIPreference();
     
+    // Check URL parameters for debug mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const debugParam = urlParams.get('debug');
+    const isUrlDebugMode = debugParam === 'true';
+    
     setTemperatureUnit(savedTempUnit);
     setWeatherAPI(savedWeatherAPI);
+    setIsDebugMode(isUrlDebugMode);
+    
+    // If debug mode is enabled via URL, also enable internal debug mode
+    if (isUrlDebugMode) {
+      setDebugMode(true);
+    }
   }, []);
 
   // Load saved location and fetch data after weatherAPI is set
   useEffect(() => {
     // Only run after weatherAPI has been initialized (not default value)
-    if (weatherAPI === 'openweather' && !localStorage.getItem('gardenWateringWeatherAPI')) {
+    if (weatherAPI === 'visualcrossing' && !localStorage.getItem('gardenWateringWeatherAPI')) {
       return; // Still initializing, default value
     }
     
@@ -377,59 +386,63 @@ export default function Home() {
                 variant="outlined"
               />
               
-              {/* Weather API Selection */}
-              <FormControl sx={{ minWidth: 160 }}>
-                <InputLabel>Weather Source</InputLabel>
-                <Select
-                  value={weatherAPI}
-                  onChange={handleWeatherAPIChange}
-                  label="Weather Source"
-                  size="small"
-                >
-                  <MenuItem value="openweather">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <CloudQueue sx={{ fontSize: '1rem' }} />
-                      OpenWeather
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="nws">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Public sx={{ fontSize: '1rem' }} />
-                      NWS
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="openmeteo">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <WbSunny sx={{ fontSize: '1rem' }} />
-                      Open-Meteo
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="visualcrossing">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Cloud sx={{ fontSize: '1rem' }} />
-                      Visual Crossing
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
+              {/* Weather API Selection - Only show in debug mode */}
+              {isDebugMode && (
+                <FormControl sx={{ minWidth: 160 }}>
+                  <InputLabel>Weather Source</InputLabel>
+                  <Select
+                    value={weatherAPI}
+                    onChange={handleWeatherAPIChange}
+                    label="Weather Source"
+                    size="small"
+                  >
+                    <MenuItem value="openweather">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <CloudQueue sx={{ fontSize: '1rem' }} />
+                        OpenWeather
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="nws">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Public sx={{ fontSize: '1rem' }} />
+                        NWS
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="openmeteo">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <WbSunny sx={{ fontSize: '1rem' }} />
+                        Open-Meteo
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="visualcrossing">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Cloud sx={{ fontSize: '1rem' }} />
+                        Visual Crossing
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              )}
               
-              {/* Debug Mode Toggle */}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={debugMode}
-                    onChange={(e) => setDebugMode(e.target.checked)}
-                    color="warning"
-                  />
-                }
-                label={
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <BugReport sx={{ fontSize: '1rem' }} />
-                    <Typography variant="caption">Debug</Typography>
-                  </Box>
-                }
-                sx={{ minWidth: 'auto' }}
-              />
+              {/* Debug Mode Toggle - Only show in debug mode */}
+              {isDebugMode && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={debugMode}
+                      onChange={(e) => setDebugMode(e.target.checked)}
+                      color="warning"
+                    />
+                  }
+                  label={
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <BugReport sx={{ fontSize: '1rem' }} />
+                      <Typography variant="caption">Debug</Typography>
+                    </Box>
+                  }
+                  sx={{ minWidth: 'auto' }}
+                />
+              )}
               
               <Button
                 variant="contained"
@@ -523,7 +536,8 @@ export default function Home() {
                 </Typography>
               </Paper>
               
-              {todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
+              {/* Key factors - only show in debug mode */}
+              {isDebugMode && todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
                 <Box mb={2}>
                   <Typography variant="subtitle2" gutterBottom color="text.secondary">
                     Key factors considered:
@@ -542,17 +556,19 @@ export default function Home() {
                 </Box>
               )}
               
-              {/* Confidence level moved to bottom */}
-              <Box display="flex" justifyContent="center">
-                <Chip
-                  label={`${todayAdvice.confidence} confidence`}
-                  color={todayAdvice.confidence === 'high' ? 'success' : 
-                         todayAdvice.confidence === 'medium' ? 'warning' : 'default'}
-                  size="small"
-                  variant="outlined"
-                  sx={{ opacity: 0.6, fontSize: '0.7rem' }}
-                />
-              </Box>
+              {/* Confidence level - only show in debug mode */}
+              {isDebugMode && (
+                <Box display="flex" justifyContent="center">
+                  <Chip
+                    label={`${todayAdvice.confidence} confidence`}
+                    color={todayAdvice.confidence === 'high' ? 'success' : 
+                           todayAdvice.confidence === 'medium' ? 'warning' : 'default'}
+                    size="small"
+                    variant="outlined"
+                    sx={{ opacity: 0.6, fontSize: '0.7rem' }}
+                  />
+                </Box>
+              )}
             </CardContent>
           </Card>
         )}
