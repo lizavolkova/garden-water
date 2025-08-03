@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Head from 'next/head';
 import {
   Container,
@@ -382,15 +383,17 @@ export default function Home() {
               bgcolor: 'transparent'
             }}
           >
-            <img 
+            <Image 
               src="/water-gnome-logo.png" 
               alt="Water Gnome Logo"
+              width={180}
+              height={180}
               style={{ 
                 width: '100%', 
                 height: '100%', 
-                objectFit: 'contain',
-                display: 'block'
+                objectFit: 'contain'
               }}
+              priority
             />
           </Box>
           
@@ -899,8 +902,8 @@ export default function Home() {
                       )}
                       {!debugMode && (
                         <>
-                          <TableCell align="center" sx={{ py: 1 }}>💧 Gnome's Word</TableCell>
-                          <TableCell sx={{ py: 1 }}>💭 Gnome's Musings</TableCell>
+                          <TableCell align="center" sx={{ py: 1 }}>💧 Gnome&apos;s Word</TableCell>
+                          <TableCell sx={{ py: 1 }}>💭 Gnome&apos;s Musings</TableCell>
                         </>
                       )}
                     </TableRow>
@@ -1181,9 +1184,9 @@ export default function Home() {
             lineHeight: 1.5,
             fontStyle: 'italic'
           }}>
-            <strong>Gnome's Note:</strong> This friendly garden helper uses AI magic to provide watering advice. 
-            While I've learned much in my centuries of garden watching, I can still make mistakes! 
-            Always check your soil, consider your plants' specific needs, and trust your own gardening instincts too. 🌱
+            <strong>Gnome&apos;s Note:</strong> This friendly garden helper uses AI magic to provide watering advice. 
+            While I&apos;ve learned much in my centuries of garden watching, I can still make mistakes! 
+            Always check your soil, consider your plants&apos; specific needs, and trust your own gardening instincts too. 🌱
           </Typography>
         </Box>
 
