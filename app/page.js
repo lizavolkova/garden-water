@@ -372,19 +372,27 @@ export default function Home() {
             </Tooltip>
           </Box>
 
-          <Avatar
+          <Box
             sx={{
-              width: 80,
-              height: 80,
-              margin: '0 auto 24px',
-              bgcolor: '#6B7B5C',
-              fontSize: '2.2rem',
-              boxShadow: '0 2px 8px rgba(107, 123, 92, 0.15)',
-              borderRadius: 1
+              width: { xs: 140, sm: 160, md: 180 },
+              height: { xs: 140, sm: 160, md: 180 },
+              margin: '0 auto 32px',
+              borderRadius: 2,
+              overflow: 'hidden',
+              bgcolor: 'transparent'
             }}
           >
-            🧙‍♂️
-          </Avatar>
+            <img 
+              src="/water-gnome-logo.png" 
+              alt="Water Gnome Logo"
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </Box>
           
           <Typography 
             variant="h1" 
@@ -414,7 +422,7 @@ export default function Home() {
               fontStyle: 'italic'
             }}
           >
-            Your friendly garden gnome with centuries of watering wisdom and weather expertise
+            Hee-hee-hoo!  I&apos;m Wynn the Water Gnome. I&apos;ll check the weather and tell you when it&apos;s time to water, so your garden is always happy.
           </Typography>
         </Box>
 
@@ -431,7 +439,7 @@ export default function Home() {
             <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={3} alignItems="center">
               <TextField
                 fullWidth
-                label="Your Garden's Location"
+                label="Where do your green friends live?"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
                 placeholder="Where is your garden?"
@@ -560,7 +568,7 @@ export default function Home() {
                   }
                 }}
               >
-                {loading ? 'Consulting gnome wisdom...' : debugMode ? 'Check Weather' : 'Get Gnome Advice'}
+                {loading ? 'Consulting gnome wisdom...' : debugMode ? 'Check Weather' : 'Ask the Gnome'}
               </Button>
             </Box>
           </CardContent>
@@ -591,121 +599,118 @@ export default function Home() {
               bgcolor: '#FEFFFE',
               borderRadius: '12px',
               boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
-              border: '1.5px solid',
-              borderColor: todayAdvice.shouldWater === 'yes' ? '#7B8FA3' : 
-                          todayAdvice.shouldWater === 'maybe' ? '#B8956B' : '#6B7B5C'
+              border: '1.5px solid #E8EDE4'
             }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Avatar sx={{ 
-                  bgcolor: todayAdvice.shouldWater === 'yes' ? '#7B8FA3' : 
-                           todayAdvice.shouldWater === 'maybe' ? '#B8956B' : '#6B7B5C',
-                  width: 52, 
-                  height: 52,
-                  borderRadius: '8px'
-                }}>
-                  <WaterDrop sx={{ fontSize: '1.3rem' }} />
-                </Avatar>
-                <Box>
-                  <Typography 
-                    variant="h4" 
-                    component="h2" 
-                    sx={{
-                      color: '#4A5D3A',
-                      fontWeight: 500,
-                      fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                      fontFamily: 'serif'
-                    }}
-                  >
-                    Gnome&apos;s Daily Wisdom
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+              <Typography 
+                variant="h4" 
+                component="h2" 
+                sx={{
+                  color: '#4A5D3A',
+                  fontWeight: 500,
+                  fontSize: { xs: '1.3rem', sm: '1.5rem' },
+                  fontFamily: 'serif',
+                  mb: 3
+                }}
+              >
+                A Gnome&apos;s Wisdom for Today
+              </Typography>
+              
+              {/* Simplified icon + advice layout */}
+              <Box 
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: '16px',
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  alignItems: 'center',
+                  gap: { xs: 3, md: 4 },
+                  bgcolor: todayAdvice.shouldWater === 'yes' ? '#F4F7FA' : 
+                          todayAdvice.shouldWater === 'maybe' ? '#FAF7F0' : '#F6F9F4',
+                  border: '1px solid',
+                  borderColor: todayAdvice.shouldWater === 'yes' ? '#D6E3F0' : 
+                              todayAdvice.shouldWater === 'maybe' ? '#E8DCC9' : '#E0E8D6'
+                }}
+              >
+                {/* Large emoji icon */}
+                <Box sx={{ fontSize: { xs: '3.5rem', md: '4rem' } }}>
+                  {todayAdvice.shouldWater === 'yes' ? '💧' : 
+                   todayAdvice.shouldWater === 'maybe' ? '🌱' : '🍂'}
+                </Box>
+                
+                {/* Advice content */}
+                <Box sx={{ textAlign: { xs: 'center', md: 'left' }, flex: 1 }}>
+                  <Typography variant="h5" sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                    mb: 1,
+                    color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
+                           todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
+                    fontFamily: 'serif'
+                  }}>
+                    {todayAdvice.shouldWater === 'yes' ? 'Time for a drink!' : 
+                     todayAdvice.shouldWater === 'maybe' ? 'Maybe a little sip?' : 
+                     'Let them rest today!'}
                   </Typography>
+                  
+                  <Typography variant="body1" sx={{ 
+                    color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
+                           todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
+                    lineHeight: 1.6,
+                    fontSize: { xs: '0.95rem', sm: '1rem' }
+                  }}>
+                    {todayAdvice.reason}
+                  </Typography>
+                  
+                  {/* Additional advice if available */}
+                  {todayAdvice.advice && (
+                    <Typography variant="body2" sx={{ 
+                      color: '#7A8471',
+                      lineHeight: 1.5,
+                      mt: 1,
+                      fontSize: { xs: '0.9rem', sm: '0.95rem' }
+                    }}>
+                      {todayAdvice.advice}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
               
-              {/* Main watering decision in prominent card */}
-              <Paper sx={{
-                p: 4,
-                mb: 3,
-                bgcolor: todayAdvice.shouldWater === 'yes' ? '#F4F7FA' : 
-                        todayAdvice.shouldWater === 'maybe' ? '#FAF7F0' : '#F6F9F4',
-                borderRadius: '10px',
-                textAlign: 'center',
-                boxShadow: '0 2px 12px rgba(107, 123, 92, 0.08)',
-                border: '1px solid',
-                borderColor: todayAdvice.shouldWater === 'yes' ? '#D6E3F0' : 
-                            todayAdvice.shouldWater === 'maybe' ? '#E8DCC9' : '#E0E8D6'
-              }}>
-                <Typography variant="h2" sx={{ 
-                  fontWeight: 500, 
-                  fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                  mb: 2,
-                  color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
-                         todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
-                  fontFamily: 'serif'
-                }}>
-                  {todayAdvice.shouldWater === 'yes' ? '💧 Your gnome says: Water today!' : 
-                   todayAdvice.shouldWater === 'maybe' ? '🌱 Your gnome suggests: Maybe water today' : 
-                   '🍂 Your gnome advises: Let the garden rest today'}
-                </Typography>
-                <Typography variant="body1" sx={{ 
-                  fontWeight: 400,
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
-                  color: '#6B7B5C',
-                  lineHeight: 1.6,
-                  fontStyle: 'italic'
-                }}>
-                  {todayAdvice.reason}
-                </Typography>
-                
-                {/* Additional advice if available */}
-                {todayAdvice.advice && (
-                  <Typography variant="body2" sx={{ 
-                    fontWeight: 400,
-                    fontSize: { xs: '0.9rem', sm: '0.95rem' },
-                    color: '#7A8471',
-                    lineHeight: 1.5,
-                    mt: 1.5,
-                    fontStyle: 'normal'
-                  }}>
-                    {todayAdvice.advice}
-                  </Typography>
-                )}
-              </Paper>
-              
-              {/* Key factors - only show in debug mode */}
-              {isDebugMode && todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
-                <Box mb={2}>
-                  <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                    Key factors considered:
-                  </Typography>
-                  <Box display="flex" flexWrap="wrap" gap={1}>
-                    {todayAdvice.keyFactors.map((factor, index) => (
-                      <Chip 
-                        key={index} 
-                        label={factor} 
-                        size="small" 
-                        variant="outlined" 
-                        color="primary"
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-              
-              {/* Confidence level - only show in debug mode */}
+              {/* Debug info - only show in debug mode */}
               {isDebugMode && (
-                <Box display="flex" justifyContent="center">
-                  <Chip
-                    label={`${todayAdvice.confidence} confidence`}
-                    size="small"
-                    variant="outlined"
-                    sx={{ 
-                      fontSize: '0.7rem',
-                      color: '#616161',
-                      borderColor: '#E0E0E0',
-                      bgcolor: '#FAFAFA'
-                    }}
-                  />
+                <Box mt={3}>
+                  {todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
+                    <Box mb={2}>
+                      <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                        Key factors considered:
+                      </Typography>
+                      <Box display="flex" flexWrap="wrap" gap={1}>
+                        {todayAdvice.keyFactors.map((factor, index) => (
+                          <Chip 
+                            key={index} 
+                            label={factor} 
+                            size="small" 
+                            variant="outlined" 
+                            color="primary"
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                  
+                  <Box display="flex" justifyContent="center">
+                    <Chip
+                      label={`${todayAdvice.confidence} confidence`}
+                      size="small"
+                      variant="outlined"
+                      sx={{ 
+                        fontSize: '0.7rem',
+                        color: '#616161',
+                        borderColor: '#E0E0E0',
+                        bgcolor: '#FAFAFA'
+                      }}
+                    />
+                  </Box>
                 </Box>
               )}
             </CardContent>
@@ -723,60 +728,81 @@ export default function Home() {
             }}
           >
             <CardContent sx={{ p: 4 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Avatar sx={{ 
-                  bgcolor: debugMode ? 'warning.main' : '#6B7B5C', 
-                  width: 52, 
-                  height: 52,
-                  borderRadius: '8px'
-                }}>
-                  {debugMode ? <BugReport sx={{ fontSize: '1.3rem' }} /> : <WbSunny sx={{ fontSize: '1.3rem' }} />}
-                </Avatar>
-                <Box>
+              <Box mb={3}>
+                {debugMode && (
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Avatar sx={{ 
+                      bgcolor: 'warning.main', 
+                      width: 48, 
+                      height: 48,
+                      borderRadius: '8px'
+                    }}>
+                      <BugReport sx={{ fontSize: '1.2rem' }} />
+                    </Avatar>
+                    <Box>
+                      <Typography 
+                        variant="h4" 
+                        component="h2" 
+                        sx={{
+                          color: 'warning.main',
+                          fontWeight: 500,
+                          fontSize: { xs: '1.4rem', sm: '1.6rem' },
+                          fontFamily: 'serif'
+                        }}
+                      >
+                        Gnome&apos;s Weather Notes
+                      </Typography>
+                      <Chip 
+                        label={`SOURCE: ${weatherAPI.toUpperCase()}`}
+                        color="warning" 
+                        variant="outlined" 
+                        size="small"
+                      />
+                    </Box>
+                  </Box>
+                )}
+                {!debugMode && (
                   <Typography 
                     variant="h4" 
                     component="h2" 
                     sx={{
-                      color: debugMode ? 'warning.main' : '#4A5D3A',
+                      color: '#4A5D3A',
                       fontWeight: 500,
                       fontSize: { xs: '1.4rem', sm: '1.6rem' },
                       fontFamily: 'serif'
                     }}
                   >
-                    {debugMode ? 'Gnome\'s Weather Notes' : 'Weekly Garden Watering Plan'}
+                    A Peek at the Week Ahead
                   </Typography>
-                  {debugMode && (
-                    <Chip 
-                      label={`SOURCE: ${weatherAPI.toUpperCase()}`}
-                      color="warning" 
-                      variant="outlined" 
-                      size="small"
-                    />
-                  )}
-                </Box>
+                )}
               </Box>
               
               {!debugMode && wateringAdvice && (
-                <Alert 
-                  severity="info" 
+                <Box 
                   sx={{ 
                     mb: 3,
+                    p: 3,
                     borderRadius: '8px',
                     bgcolor: '#F9FBF7',
                     border: '1px solid #E0E8D6',
-                    boxShadow: '0 1px 8px rgba(107, 123, 92, 0.06)',
-                    '& .MuiAlert-icon': {
-                      color: '#6B7B5C'
-                    }
+                    boxShadow: '0 1px 8px rgba(107, 123, 92, 0.06)'
                   }}
                 >
-                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500, color: '#4A5D3A' }}>
-                    Water Gnome&apos;s Weekly Advice
-                  </Typography>
-                  <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#6B7B5C', fontStyle: 'italic' }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Box sx={{ fontSize: '1.5rem' }}>🦉</Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#4A5D3A', fontFamily: 'serif' }}>
+                      Gnome&apos;s Weekly Wisdom
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ 
+                    lineHeight: 1.6, 
+                    color: '#4A5D3A',
+                    fontSize: '1rem',
+                    fontWeight: 500
+                  }}>
                     {wateringAdvice.weekSummary}
                   </Typography>
-                </Alert>
+                </Box>
               )}
               
               <TableContainer 
@@ -793,6 +819,7 @@ export default function Home() {
                 <Table 
                   size="small"
                   sx={{
+                    // Desktop styles
                     '& .MuiTableHead-root': {
                       '& .MuiTableCell-root': {
                         backgroundColor: '#F9FBF7',
@@ -801,19 +828,57 @@ export default function Home() {
                         color: '#4A5D3A',
                         borderBottom: '1px solid #E8EDE4',
                         fontFamily: 'serif',
-                        py: 2
+                        py: 2,
+                        // Hide table header on mobile
+                        display: { xs: 'none', md: 'table-cell' }
                       }
                     },
                     '& .MuiTableBody-root': {
+                      // On mobile, display as block to stack rows
+                      display: { xs: 'block', md: 'table-row-group' },
                       '& .MuiTableRow-root': {
+                        // Mobile: transform rows into cards
+                        display: { xs: 'block', md: 'table-row' },
+                        backgroundColor: { xs: '#FEFFFE', md: 'inherit' },
+                        border: { xs: '1px solid #E8EDE4', md: 'none' },
+                        borderRadius: { xs: '8px', md: '0' },
+                        margin: { xs: '8px 0', md: '0' },
+                        padding: { xs: '16px', md: '0' },
+                        boxShadow: { xs: '0 2px 8px rgba(107, 123, 92, 0.08)', md: 'none' },
                         '&:hover': {
-                          backgroundColor: '#FBFCFA'
+                          backgroundColor: { xs: '#F9FBF7', md: '#FBFCFA' }
+                        },
+                        // Special styling for today's row on mobile
+                        '&.today-row': {
+                          backgroundColor: { xs: '#E3F2FD', md: 'primary.light' },
+                          borderColor: { xs: '#2196F3', md: 'inherit' },
+                          '&:hover': {
+                            backgroundColor: { xs: '#E1F5FE', md: 'primary.dark' }
+                          }
                         },
                         '& .MuiTableCell-root': {
+                          // Mobile: display as block with labels
+                          display: { xs: 'flex', md: 'table-cell' },
+                          alignItems: { xs: 'center', md: 'inherit' },
+                          justifyContent: { xs: 'space-between', md: 'inherit' },
+                          border: { xs: 'none', md: 'inherit' },
+                          padding: { xs: '8px 0', md: '12px' },
                           color: '#7A8471',
                           fontSize: '0.75rem',
-                          py: 1.5,
-                          borderBottom: '1px solid #F0F3EC'
+                          borderBottom: { xs: 'none', md: '1px solid #F0F3EC' },
+                          // Add data labels on mobile using CSS pseudo-elements
+                          '&::before': {
+                            content: { xs: 'attr(data-label)', md: 'none' },
+                            fontWeight: { xs: 600, md: 'inherit' },
+                            color: { xs: '#4A5D3A', md: 'inherit' },
+                            fontSize: { xs: '0.8rem', md: 'inherit' },
+                            minWidth: { xs: '100px', md: 'auto' },
+                            display: { xs: 'block', md: 'none' }
+                          },
+                          // Hide certain cells on mobile that are less important
+                          '&.mobile-hide': {
+                            display: { xs: 'none', md: 'table-cell' }
+                          }
                         }
                       }
                     }
@@ -834,8 +899,8 @@ export default function Home() {
                       )}
                       {!debugMode && (
                         <>
-                          <TableCell align="center" sx={{ py: 1 }}>💧 Water?</TableCell>
-                          <TableCell sx={{ py: 1 }}>💭 Reasoning</TableCell>
+                          <TableCell align="center" sx={{ py: 1 }}>💧 Gnome's Word</TableCell>
+                          <TableCell sx={{ py: 1 }}>💭 Gnome's Musings</TableCell>
                         </>
                       )}
                     </TableRow>
@@ -857,36 +922,68 @@ export default function Home() {
                       return (
                         <TableRow 
                           key={index}
+                          className={isTodayRow ? 'today-row' : ''}
                           sx={{
                             backgroundColor: isTodayRow ? 'primary.light' : isPast ? 'grey.100' : 'inherit',
+                            // Make past days smaller and less prominent
+                            transform: isPast ? { xs: 'scale(0.92)', md: 'scale(0.95)' } : 'scale(1)',
+                            opacity: isPast ? 0.7 : 1,
+                            transformOrigin: 'left center',
                             '& .MuiTableCell-root': {
-                              color: isTodayRow ? 'primary.contrastText' : 'inherit'
+                              color: isTodayRow ? 'primary.contrastText' : 'inherit',
+                              // Smaller padding and font for past days
+                              py: isPast ? { xs: 0.5, md: 1 } : { xs: '8px 0', md: 1.5 },
+                              fontSize: isPast ? { xs: '0.65rem', md: '0.7rem' } : { xs: '0.75rem', md: '0.75rem' }
                             }
                           }}
                         >
-                          <TableCell sx={{ py: 1 }}>
+                          <TableCell data-label="Date" sx={{ py: 1 }}>
                             <Box>
-                              <Typography variant="body2" fontWeight={600}>
+                              <Typography 
+                                variant="body2" 
+                                fontWeight={isPast ? 400 : 600}
+                                sx={{ 
+                                  fontSize: isPast ? { xs: '0.65rem', md: '0.7rem' } : { xs: '0.75rem', md: '0.875rem' }
+                                }}
+                              >
                                 {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
                                   weekday: 'short', 
                                   month: 'short', 
                                   day: 'numeric' 
                                 })}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary"
+                                sx={{ 
+                                  fontSize: isPast ? { xs: '0.6rem', md: '0.65rem' } : { xs: '0.7rem', md: '0.75rem' }
+                                }}
+                              >
                                 {dayDate}
                               </Typography>
                               {isTodayRow && (
                                 <Chip label="TODAY" size="small" color="primary" sx={{ ml: 1, fontSize: '0.6rem', height: 16 }} />
                               )}
                               {isPast && (
-                                <Chip label="PAST" size="small" color="default" sx={{ ml: 1, fontSize: '0.6rem', height: 16 }} />
+                                <Chip 
+                                  label="PAST" 
+                                  size="small" 
+                                  color="default" 
+                                  sx={{ 
+                                    ml: 1, 
+                                    fontSize: { xs: '0.5rem', md: '0.55rem' }, 
+                                    height: { xs: 12, md: 14 },
+                                    '& .MuiChip-label': {
+                                      px: 0.5
+                                    }
+                                  }} 
+                                />
                               )}
                             </Box>
                           </TableCell>
                           
                           {/* Weather column - always shown */}
-                          <TableCell align="center" sx={{ py: 1 }}>
+                          <TableCell data-label="Weather" align="center" sx={{ py: 1 }}>
                             {debugMode ? (
                               <Box display="flex" flexDirection="column" alignItems="center" gap={0.25}>
                                 <Typography variant="body2" sx={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
@@ -918,22 +1015,22 @@ export default function Home() {
                           {/* Debug mode columns */}
                           {debugMode && (
                             <>
-                              <TableCell align="center" sx={{ py: 1 }}>
+                              <TableCell data-label="High" align="center" sx={{ py: 1 }}>
                                 <Typography variant="body2" fontWeight={600}>
                                   {Math.round(day.temp_max)}°
                                 </Typography>
                               </TableCell>
-                              <TableCell align="center" sx={{ py: 1 }}>
+                              <TableCell data-label="Low" align="center" sx={{ py: 1 }}>
                                 <Typography variant="body2">
                                   {Math.round(day.temp_min)}°
                                 </Typography>
                               </TableCell>
-                              <TableCell align="center" sx={{ py: 1 }}>
+                              <TableCell data-label="Humidity" align="center" className="mobile-hide" sx={{ py: 1 }}>
                                 <Typography variant="body2">
                                   {day.humidity}%
                                 </Typography>
                               </TableCell>
-                              <TableCell align="center" sx={{ py: 1 }}>
+                              <TableCell data-label="Rain" align="center" className="mobile-hide" sx={{ py: 1 }}>
                                 <Typography 
                                   variant="body2" 
                                   color={day.rain > 0.1 ? 'info.main' : 'text.secondary'}
@@ -942,7 +1039,7 @@ export default function Home() {
                                   {day.rain.toFixed(2)}&quot;
                                 </Typography>
                               </TableCell>
-                              <TableCell sx={{ py: 1 }}>
+                              <TableCell data-label="Description" className="mobile-hide" sx={{ py: 1 }}>
                                 <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                                   {day.description}
                                 </Typography>
@@ -953,7 +1050,7 @@ export default function Home() {
                           {/* AI mode columns */}
                           {!debugMode && (
                             <>
-                              <TableCell align="center" sx={{ py: 1 }}>
+                              <TableCell data-label="Water?" align="center" sx={{ py: 1 }}>
                                 {isPast ? (
                                   <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.75rem' }}>
                                     Past
@@ -1029,7 +1126,7 @@ export default function Home() {
                                   );
                                 })()}
                               </TableCell>
-                              <TableCell sx={{ py: 1 }}>
+                              <TableCell data-label="Reasoning" sx={{ py: 1 }}>
                                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', lineHeight: 1.3 }}>
                                   {day.reason}
                                 </Typography>
@@ -1066,6 +1163,29 @@ export default function Home() {
             </CardContent>
           </Card>
         )}
+
+        {/* AI Disclaimer */}
+        <Box 
+          sx={{ 
+            mt: 4,
+            p: 3,
+            borderRadius: '8px',
+            bgcolor: '#FDF8F6',
+            border: '1px solid #E8D4CC',
+            textAlign: 'center'
+          }}
+        >
+          <Typography variant="body2" sx={{ 
+            color: '#A0725C',
+            fontSize: '0.85rem',
+            lineHeight: 1.5,
+            fontStyle: 'italic'
+          }}>
+            <strong>Gnome's Note:</strong> This friendly garden helper uses AI magic to provide watering advice. 
+            While I've learned much in my centuries of garden watching, I can still make mistakes! 
+            Always check your soil, consider your plants' specific needs, and trust your own gardening instincts too. 🌱
+          </Typography>
+        </Box>
 
       </Container>
     </>
