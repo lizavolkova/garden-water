@@ -1058,7 +1058,7 @@ export default function Home() {
                   }}
                 >
                   <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#6B7B5C' }}>
-                    <strong>Gnome's Weather Notes:</strong> Raw weather data from {weatherAPI} API. 
+                    <strong>Gnome Weather Notes:</strong> Raw weather data from {weatherAPI} API. 
                     {wateringAdvice ? 'Gnome advice is also available.' : 'Turn off debug mode to get gnome watering wisdom.'}
                   </Typography>
                 </Alert>
