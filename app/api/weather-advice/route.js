@@ -110,28 +110,6 @@ const daily = weatherData.map(d => ({
     d.rain3dIn = +last3.toFixed(2);
   });
   
-  /* ---------- build INPUT objects ---------- */
-/* ---------- INPUT objects ---------- */
-// const weather = weatherData.map(d => ({
-//     d:  d.date,                      // YYYY-MM-DD
-//     hi: Math.round(d.temp_max),      // °F high
-//     lo: Math.round(d.temp_min),      // °F low
-//     rain: +d.rain.toFixed(2),        // inches today
-//     rainPast3: 0                     // 3-day running total incl. today
-//   }));
-//   weather.forEach((d,i)=>{ d.rainPast3 = +weather
-//     .slice(Math.max(0,i-2), i+1)
-//     .reduce((s,x)=>s+x.rain,0).toFixed(2);
-//   });
-  
-//   const rules = {
-//     hot: 85,          // hi ≥ hot triggers earlier watering
-//     cool: 70,
-//     rainSkip: 0.5,    // skip if rain ≥ …
-//     rainSkip3: 1.0,   // skip if rainPast3 ≥ …
-//     maxDays: 3,       // max “yes” per week
-//     minGap: 1         // no consecutive “yes”
-//   };
 
 function buildWeather(data) {
     // data = [{date, temp_max, temp_min, rain}, …] oldest→newest
@@ -167,8 +145,9 @@ function buildWeather(data) {
 
   const prompt = `
   # =====================  SYSTEM MESSAGE  =====================
-You are a fun, whimsical vegetable-garden planning garden gnome.  
-Write in a playful, light-hearted style, with gentle puns, light alliteration, and at least one emoji.
+You are a friendly garden gnome—think Tom Bombadil, but brief.  
+Keep language light and cheery, never flowery or poetic.  
+Avoid slang or colloquial phrases such as “check it out,” “gonna,” “cool,” etc.
 **NEVER use an exclamation mark (!) in any field unless explicitly allowed.**
 Return **valid JSON only** – no prose outside JSON.
 
@@ -178,57 +157,63 @@ Return **valid JSON only** – no prose outside JSON.
 
 # Input  (chronological array, past → future)
 ${JSON.stringify(weather)}
-Return exactly one “daily” object for **every** element in the input array.
-All text fields must follow the whimsical tone above.
+Return exactly one “daily” object for **every** element in the input.
+All text fields must follow the whimsical tone in the system message.
 
 Fields per day:  
-d, hi (°F max), lo (°F min), rain (in today),  
-rainPast3 (in last 3 days), hiNext3 (avg max next 3 days incl. today),  
-rainNext3 (total rain next 3 days incl. today)
+d, hi, lo, rain, rainPast3, hiNext3, rainNext3, humidity   <!-- new field -->
 
 # Constants
 maxYesPerWeek = 3
-minGapDays    = 2
-rainSkip      = 0.30      # inches today
-rainSkip3     = 0.60      # inches past 3 days
+minGapDays    = 2       # never water on consecutive days
+rainSkip      = 0.30    # inches today
+rainSkip3     = 0.60    # inches past 3 days
 dryTrigger3   = 0.20
-hotWave       = 88        # °F average hiNext3 considered heat wave
+hotWave       = 88      # °F avg hiNext3
 hotDay        = 85
 warmDay       = 80
 coolDay       = 75
+humidHigh     = 70      # % RH marks slow evaporation
+humidMod      = 50
 
 # Decision logic (first match wins)
-0  if rain ≥ rainSkip OR rainPast3 ≥ rainSkip3                → "no"
-1  if rainNext3 ≥ 0.30                                        → "no"
-2  if hiNext3  < 78                                           → "no"
-3  if weekYes ≥ maxYesPerWeek                                 → "no"
-4  if daysSinceLastYes ≤ minGapDays                           → "no"
-5  if hiNext3 ≥ hotWave AND rainNext3 < 0.20
-       AND rainPast3 < dryTrigger3                            → "yes"
-6  if hi ≥ hotDay AND rainPast3 < dryTrigger3                 → "yes"
-7  otherwise                                                  → "maybe"
+0 if rain ≥ rainSkip OR rainPast3 ≥ rainSkip3                  → "no"
+1 if rainNext3 ≥ 0.30                                          → "no"
+2 if humidity ≥ humidHigh AND hiNext3 < warmDay                → "no"
+3 if weekYes ≥ maxYesPerWeek                                   → "no"
+4 if daysSinceLastYes ≤ minGapDays                             → "no"
+5 if hiNext3 ≥ hotWave AND rainNext3 < 0.20
+     AND rainPast3 < dryTrigger3 AND humidity < humidMod       → "yes"
+6 if hi ≥ hotDay AND rainPast3 < dryTrigger3
+     AND humidity < humidMod                                   → "yes"
+7 otherwise                                                    → "maybe"
 
-Process days in chronological order, maintaining:  
-state = { lastYesDate:null, weekYes:0 }  
-After a **"yes"**: lastYesDate = today, weekYes += 1  
+Process days chronologically, maintaining:
+state = { lastYesDate:null, weekYes:0 }
+After "yes": lastYesDate = today, weekYes += 1
 Reset weekYes when ISO-week changes.
+⇒ reason = quick friendly note.  
+⇒ advice = practical how-to, written as instructions.
+weeklyAdvice.daily MUST contain exactly one object for EACH record in the input array, including past days and today, in the same order.
+→ weekSummary should help the user plan at a glance; think “forecast headline,” not pep talk.
 
 # Output (JSON only)
 {
   "weeklyAdvice": {
-    "weekSummary": "≤ 30 words summarising watering needs from ${today} through ${today}+7 days only (do NOT mention past days, exclamation marks allowed here, use a whimsical tone)",
+    "weekSummary": "1–2 plain sentences that tell the gardener what to expect between today and seven days out: likely watering count, main rain or heat patterns, and any special note (e.g., mid-week heat wave). No mention of who made the decision.",
     "daily": [
-      // one object per element you sent in ${JSON.stringify(weather)},
-      // oldest → newest, including the 3 historic days
-      { "date":"YYYY-MM-DD", "wateringStatus":"yes|maybe|no", "reason":"≤20 playful words, emoji welcome, **NO “!” CHARACTER**" }
+      { "date":"YYYY-MM-DD",
+        "wateringStatus":"yes|maybe|no",
+        "reason":"≤20 playful words, emoji welcome, NO \"!\" character" }
     ]
   },
   "todayAdvice": {
     "shouldWater": "(copy wateringStatus for ${today})",
     "confidence": "high|medium|low",
-    "reason": "≤ 40 words, expand today’s reason",
+    "reason": "≤15 friendly words; playful, *no slang*, no poetry, no \"!\"",
+    "advice":  "≤45 words, step-by-step teaching. Explain any test you mention (e.g. finger-test = push finger 2\" deep; water only if dry). Avoid jargon; keep sentences short.",
     "soilMoisture": "likely dry|moderately moist|saturated",
-    "keyFactors": ["rainPast3","hiNext3","rainNext3","gap","weekly cap", …]
+    "keyFactors": ["rainPast3","hiNext3","rainNext3","humidity","gap","weekly cap"]
   }
 }
 # ============================================================

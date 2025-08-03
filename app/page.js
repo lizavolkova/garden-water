@@ -157,13 +157,20 @@ export default function Home() {
     setError(null);
     
     try {
-      // Check cache first unless forcing refresh or in debug mode
-      if (!forceRefresh && !debugMode) {
+      // Check cache first unless forcing refresh
+      if (!forceRefresh) {
         const cachedData = getCachedData(zip);
         if (cachedData) {
           setWeatherData(cachedData.weather);
-          setWateringAdvice(cachedData.advice);
-          setTodayAdvice(cachedData.todayAdvice || null);
+          // Only set advice data if not in debug mode and we have advice data
+          if (!debugMode && cachedData.advice) {
+            setWateringAdvice(cachedData.advice);
+            setTodayAdvice(cachedData.todayAdvice || null);
+          } else if (debugMode) {
+            // In debug mode, clear advice data to show only weather
+            setWateringAdvice(null);
+            setTodayAdvice(null);
+          }
           localStorage.setItem('gardenWateringZipCode', zip);
           setLoading(false);
           setInitialLoad(false);
@@ -316,8 +323,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Garden Watering Assistant</title>
-        <meta name="description" content="AI-powered garden watering recommendations based on weather forecast" />
+        <title>Water Gnome - Your Garden Watering Expert</title>
+        <meta name="description" content="Meet Water Gnome, your friendly garden companion who provides expert watering advice based on weather patterns" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -376,7 +383,7 @@ export default function Home() {
               borderRadius: 1
             }}
           >
-            🌿
+            🧙‍♂️
           </Avatar>
           
           <Typography 
@@ -392,23 +399,8 @@ export default function Home() {
               fontFamily: 'serif'
             }}
           >
-            Waterwise Gardening
+            Water Gnome
           </Typography>
-          
-          <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={3}>
-            <Chip 
-              label="Smart Plant Care" 
-              sx={{
-                bgcolor: '#F4F6F0',
-                color: '#6B7B5C',
-                fontWeight: 400,
-                fontSize: '0.75rem',
-                border: '1px solid #D7E0CC',
-                borderRadius: '4px',
-                fontStyle: 'italic'
-              }}
-            />
-          </Box>
           
           <Typography 
             variant="body1" 
@@ -422,7 +414,7 @@ export default function Home() {
               fontStyle: 'italic'
             }}
           >
-            Nurture your garden with intelligent watering guidance rooted in nature&apos;s wisdom
+            Your friendly garden gnome with centuries of watering wisdom and weather expertise
           </Typography>
         </Box>
 
@@ -439,10 +431,10 @@ export default function Home() {
             <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={3} alignItems="center">
               <TextField
                 fullWidth
-                label="Garden Location"
+                label="Your Garden's Location"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                placeholder="Enter ZIP code"
+                placeholder="Where is your garden?"
                 InputProps={{
                   startAdornment: <LocationOn sx={{ mr: 1, color: '#6B7B5C' }} />,
                 }}
@@ -546,7 +538,7 @@ export default function Home() {
                 size="large"
                 onClick={fetchWeatherAndAdvice}
                 disabled={loading || !zipCode}
-                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <LocalFlorist sx={{ fontSize: '1.1rem' }} />}
+                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <WaterDrop sx={{ fontSize: '1.1rem' }} />}
                 sx={{ 
                   minWidth: 180,
                   height: 56,
@@ -568,7 +560,7 @@ export default function Home() {
                   }
                 }}
               >
-                {loading ? 'Analyzing...' : debugMode ? 'Get Weather Data' : 'Get Garden Advice'}
+                {loading ? 'Consulting gnome wisdom...' : debugMode ? 'Check Weather' : 'Get Gnome Advice'}
               </Button>
             </Box>
           </CardContent>
@@ -625,7 +617,7 @@ export default function Home() {
                       fontFamily: 'serif'
                     }}
                   >
-                    Today&apos;s Garden Care
+                    Gnome&apos;s Daily Wisdom
                   </Typography>
                 </Box>
               </Box>
@@ -651,9 +643,9 @@ export default function Home() {
                          todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
                   fontFamily: 'serif'
                 }}>
-                  {todayAdvice.shouldWater === 'yes' ? '💧 Water your garden today' : 
-                   todayAdvice.shouldWater === 'maybe' ? '🌱 Consider watering today' : 
-                   '🍂 Let your garden rest today'}
+                  {todayAdvice.shouldWater === 'yes' ? '💧 Your gnome says: Water today!' : 
+                   todayAdvice.shouldWater === 'maybe' ? '🌱 Your gnome suggests: Maybe water today' : 
+                   '🍂 Your gnome advises: Let the garden rest today'}
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontWeight: 400,
@@ -664,6 +656,20 @@ export default function Home() {
                 }}>
                   {todayAdvice.reason}
                 </Typography>
+                
+                {/* Additional advice if available */}
+                {todayAdvice.advice && (
+                  <Typography variant="body2" sx={{ 
+                    fontWeight: 400,
+                    fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                    color: '#7A8471',
+                    lineHeight: 1.5,
+                    mt: 1.5,
+                    fontStyle: 'normal'
+                  }}>
+                    {todayAdvice.advice}
+                  </Typography>
+                )}
               </Paper>
               
               {/* Key factors - only show in debug mode */}
@@ -737,7 +743,7 @@ export default function Home() {
                       fontFamily: 'serif'
                     }}
                   >
-                    {debugMode ? 'Debug: Raw Weather Data' : 'Garden Care Calendar'}
+                    {debugMode ? 'Gnome\'s Weather Notes' : 'Weekly Garden Watering Plan'}
                   </Typography>
                   {debugMode && (
                     <Chip 
@@ -765,7 +771,7 @@ export default function Home() {
                   }}
                 >
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500, color: '#4A5D3A' }}>
-                    This Week&apos;s Wisdom
+                    Water Gnome&apos;s Weekly Advice
                   </Typography>
                   <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#6B7B5C', fontStyle: 'italic' }}>
                     {wateringAdvice.weekSummary}
@@ -1052,8 +1058,8 @@ export default function Home() {
                   }}
                 >
                   <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#6B7B5C' }}>
-                    <strong>Debug Mode:</strong> Showing raw weather data from {weatherAPI} API. 
-                    {wateringAdvice ? 'AI watering recommendations are also shown.' : 'Turn off debug mode to get watering recommendations.'}
+                    <strong>Gnome's Weather Notes:</strong> Raw weather data from {weatherAPI} API. 
+                    {wateringAdvice ? 'Gnome advice is also available.' : 'Turn off debug mode to get gnome watering wisdom.'}
                   </Typography>
                 </Alert>
               )}
