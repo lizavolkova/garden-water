@@ -1,9 +1,36 @@
 'use client';
 
 import { Card, CardContent, Box, Typography, Chip } from '@mui/material';
+import { useState, useEffect } from 'react';
 
 export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
-  if (!todayAdvice) return null;
+  const [selectedCopy, setSelectedCopy] = useState(null);
+  
+  // Select random copy variation when todayAdvice changes
+  useEffect(() => {
+    if (todayAdvice) {
+      const copyVariations = {
+        yes: [
+          { title: 'The garden is thirsty!' },
+          { title: `Let's get watering!` }
+        ],
+        maybe: [
+          { title: `Let's ask the soil.` },
+          { title: 'Check soil moisture' }
+        ],
+        no: [
+          { title: 'Let the garden rest today!' },
+          { title: 'Skip watering today' }
+        ]
+      };
+      
+      const variations = copyVariations[todayAdvice.shouldWater] || copyVariations.no;
+      const randomIndex = Math.floor(Math.random() * variations.length);
+      setSelectedCopy(variations[randomIndex]);
+    }
+  }, [todayAdvice]);
+  
+  if (!todayAdvice || !selectedCopy) return null;
 
   return (
     <Card 
@@ -26,63 +53,103 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
             mb: 3
           }}
         >
-          A Gnome&apos;s Wisdom for Today
+          Wynn&apos;s Water Wisdom for Today
         </Typography>
         
-        {/* Simplified icon + advice layout */}
+        {/* Responsive Layout - centered on mobile, side-by-side on desktop */}
         <Box 
-          sx={{
-            p: { xs: 3, md: 4 },
-            borderRadius: '16px',
+          sx={{ 
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            alignItems: 'center',
-            gap: { xs: 3, md: 4 },
-            bgcolor: todayAdvice.shouldWater === 'yes' ? '#F4F7FA' : 
-                    todayAdvice.shouldWater === 'maybe' ? '#FAF7F0' : '#F6F9F4',
-            border: '1px solid',
-            borderColor: todayAdvice.shouldWater === 'yes' ? '#D6E3F0' : 
-                        todayAdvice.shouldWater === 'maybe' ? '#E8DCC9' : '#E0E8D6'
+            alignItems: { xs: 'center', md: 'flex-start' },
+            gap: { xs: 0, md: 4 },
+            textAlign: { xs: 'center', md: 'left' }
           }}
         >
-          {/* Large emoji icon */}
-          <Box sx={{ fontSize: { xs: '3.5rem', md: '4rem' } }}>
-            {todayAdvice.shouldWater === 'yes' ? '💧' : 
-             todayAdvice.shouldWater === 'maybe' ? '🌱' : '🍂'}
+          {/* Icon Section - centered on mobile, left side on desktop */}
+          <Box 
+            sx={{ 
+              order: { xs: 2, md: 1 },
+              mb: { xs: 3, md: 0 },
+              flexShrink: 0
+            }}
+          >
+            <Box 
+              sx={{ 
+                fontSize: { xs: '4rem', md: '5rem' },
+                display: 'flex',
+                justifyContent: 'center'
+              }}
+            >
+              {todayAdvice.shouldWater === 'yes' ? '💧' : 
+               todayAdvice.shouldWater === 'maybe' ? '🌱' : '🍂'}
+            </Box>
           </Box>
           
-          {/* Advice content */}
-          <Box sx={{ textAlign: { xs: 'center', md: 'left' }, flex: 1 }}>
-            <Typography variant="h5" sx={{ 
-              fontWeight: 600,
-              fontSize: { xs: '1.1rem', sm: '1.3rem' },
-              mb: 1,
-              color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
-                     todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
-              fontFamily: 'serif'
-            }}>
-              {todayAdvice.shouldWater === 'yes' ? 'Time for a drink!' : 
-               todayAdvice.shouldWater === 'maybe' ? 'Maybe a little sip?' : 
-               'Let them rest today!'}
+          {/* Content Section - below icon on mobile, right side on desktop */}
+          <Box 
+            sx={{ 
+              order: { xs: 1, md: 2 },
+              flex: 1,
+              maxWidth: { xs: '100%', md: 'none' }
+            }}
+          >
+            {/* Status Badge */}
+            <Box sx={{ mb: { xs: 3, md: 2 } }}>
+              <Chip
+                label={todayAdvice.shouldWater === 'yes' ? 'YES' : 
+                       todayAdvice.shouldWater === 'maybe' ? 'MAYBE' : 'NO'}
+                sx={{
+                  bgcolor: todayAdvice.shouldWater === 'yes' ? '#1976D2' : 
+                          todayAdvice.shouldWater === 'maybe' ? '#FFA726' : '#2E7D32',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  px: 2,
+                  py: 0.5,
+                  textTransform: 'uppercase'
+                }}
+              />
+            </Box>
+            
+            {/* Main advice title */}
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                fontWeight: 600,
+                fontSize: { xs: '1.3rem', sm: '1.5rem' },
+                mb: 2,
+                color: '#4A5D3A',
+                fontFamily: 'serif'
+              }}
+            >
+              {selectedCopy.title}
             </Typography>
             
-            <Typography variant="body1" sx={{ 
-              color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
-                     todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
-              lineHeight: 1.6,
-              fontSize: { xs: '0.95rem', sm: '1rem' }
-            }}>
+            {/* Reason text */}
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: '#7A8471',
+                lineHeight: 1.6,
+                fontSize: { xs: '0.95rem', sm: '1rem' },
+                mb: 2
+              }}
+            >
               {todayAdvice.reason}
             </Typography>
             
             {/* Additional advice if available */}
             {todayAdvice.advice && (
-              <Typography variant="body2" sx={{ 
-                color: '#7A8471',
-                lineHeight: 1.5,
-                mt: 1,
-                fontSize: { xs: '0.9rem', sm: '0.95rem' }
-              }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#7A8471',
+                  lineHeight: 1.5,
+                  fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                  fontStyle: 'italic'
+                }}
+              >
                 {todayAdvice.advice}
               </Typography>
             )}

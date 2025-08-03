@@ -145,9 +145,8 @@ export default function WeeklyTable({
             }}
           >
             <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Box sx={{ fontSize: '1.5rem' }}>🦉</Box>
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#4A5D3A', fontFamily: 'serif' }}>
-                Gnome&apos;s Weekly Wisdom
+                Wynn&apos;s Weekly Wisdom
               </Typography>
             </Box>
             <Typography variant="body1" sx={{ 
@@ -241,7 +240,15 @@ export default function WeeklyTable({
                       minWidth={{ xs: 'auto', md: 120 }}
                       flexDirection={{ xs: 'row', md: 'column' }}
                     >
-                      <Box textAlign={{ xs: 'center', md: 'left' }} minWidth={{ xs: isPast ? 35 : 40, md: 'auto' }}>
+                      <Box 
+                        textAlign={{ xs: 'center', md: 'left' }} 
+                        minWidth={{ xs: isPast ? 35 : 40, md: 'auto' }}
+                        sx={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: { xs: 'center', md: 'flex-start' } 
+                        }}
+                      >
                         <Typography variant="h6" sx={{ 
                           fontSize: { xs: isPast ? '0.75rem' : '0.9rem', md: '1rem' },
                           fontWeight: { xs: isPast ? 500 : 600, md: 600 },
@@ -279,7 +286,7 @@ export default function WeeklyTable({
                               color: 'white',
                               fontSize: '0.65rem',
                               height: { xs: 16, md: 20 },
-                              display: { xs: 'none', md: 'inline-flex' }
+                              display: 'inline-flex'
                             }} 
                           />
                         )}
