@@ -15,7 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   BugReport 
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   getWateringDecision, 
   getFadedColor, 
@@ -46,7 +46,13 @@ export default function WeeklyTable({
     });
   };
 
-  const data = debugMode ? weatherData : wateringAdvice?.daily || [];
+  const data = useMemo(() => {
+    return debugMode ? weatherData : wateringAdvice?.daily || [];
+  }, [debugMode, weatherData, wateringAdvice?.daily]);
+
+  const todayLocal = useMemo(() => {
+    return isClient ? getLocalDateString() : null;
+  }, [isClient]);
   
   // Show loading spinner when loading and no data
   if (loading && (!data || data.length === 0)) {
@@ -165,10 +171,9 @@ export default function WeeklyTable({
               fontStyle: 'italic',
               lineHeight: 1.4,
               display: 'block',
-              textAlign: 'center',
-              px: 1
+              textAlign: 'left'
             }}>
-              💡 My gnome magic gets a bit hazy looking at the far-off days. Pop back tomorrow for a clearer story!
+            🔮 My gnome magic gets a bit hazy looking at the far-off days. Pop back tomorrow for a clearer story!
             </Typography>
           </Box>
         )}
@@ -176,7 +181,6 @@ export default function WeeklyTable({
         {/* Unified Responsive View */}
         <Box>
           {data.map((day, index) => {
-            const todayLocal = isClient ? getLocalDateString() : null;
             const dayDate = debugMode ? day.date : day.date;
             const isTodayRow = todayLocal && todayLocal === dayDate;
             const isPast = todayLocal && dayDate < todayLocal;
@@ -200,14 +204,14 @@ export default function WeeklyTable({
               <Card
                 key={index}
                 onClick={(e) => {
-                  // Only allow expansion on mobile
-                  if (window.innerWidth < 900) {
+                  // Allow expansion: mobile for all cards, desktop only for past cards
+                  if (window.innerWidth < 900 || (window.innerWidth >= 900 && isPast)) {
                     toggleCardExpansion(dayDate);
                   }
                 }}
                 sx={{
                   mb: 1,
-                  cursor: { xs: 'pointer', md: 'default' },
+                  cursor: { xs: 'pointer', md: isPast ? 'pointer' : 'default' },
                   bgcolor: isTodayRow ? 
                     (debugMode ? '#F3F9FF' : fadedBg) : 
                     fadedBg,
@@ -216,10 +220,10 @@ export default function WeeklyTable({
                     `1px solid ${fadedBorderColor}`,
                   borderRadius: { xs: '12px', md: '8px' },
                   opacity: isPast ? { xs: 0.7, md: 0.6 } : 1,
-                  transform: isPast ? { xs: 'scale(0.95)', md: 'scale(0.98)' } : 'scale(1)',
-                  '&:hover': {
+                  transform: 'scale(1)',
+                  '&:hover': isPast ? {} : {
                     bgcolor: debugMode ? '#F9FBF7' : getFadedColor(decisionBg, Math.min(1, fadeFactor + 0.1)),
-                    transform: isPast ? { xs: 'scale(0.96)', md: 'scale(0.99)' } : { xs: 'scale(1.01)', md: 'scale(1.001)' },
+                    transform: { xs: 'scale(1.01)', md: 'scale(1.001)' },
                   },
                   transition: 'all 0.2s ease-in-out'
                 }}
@@ -230,45 +234,45 @@ export default function WeeklyTable({
                     display="flex" 
                     alignItems="center" 
                     justifyContent="space-between"
-                    mb={{ xs: 0, md: 1 }}
+                    mb={{ xs: 0, md: isPast ? 0 : 1 }}
                   >
                     {/* Date Section */}
                     <Box 
                       display="flex" 
                       alignItems="center" 
-                      gap={{ xs: isPast ? 1.5 : 2, md: 0 }}
-                      minWidth={{ xs: 'auto', md: 120 }}
-                      flexDirection={{ xs: 'row', md: 'column' }}
+                      gap={{ xs: isPast ? 1.5 : 2, md: isPast ? 2 : 0 }}
+                      minWidth={{ xs: 'auto', md: isPast ? 'auto' : 120 }}
+                      flexDirection={{ xs: 'row', md: isPast ? 'row' : 'column' }}
                     >
                       <Box 
-                        textAlign={{ xs: 'center', md: 'left' }} 
-                        minWidth={{ xs: isPast ? 35 : 40, md: 'auto' }}
+                        textAlign={{ xs: 'center', md: isPast ? 'center' : 'left' }} 
+                        minWidth={{ xs: isPast ? 35 : 40, md: isPast ? 35 : 'auto' }}
                         sx={{ 
                           display: 'flex', 
                           flexDirection: 'column', 
-                          alignItems: { xs: 'center', md: 'flex-start' } 
+                          alignItems: { xs: 'center', md: isPast ? 'center' : 'flex-start' } 
                         }}
                       >
                         <Typography variant="h6" sx={{ 
-                          fontSize: { xs: isPast ? '0.75rem' : '0.9rem', md: '1rem' },
-                          fontWeight: { xs: isPast ? 500 : 600, md: 600 },
+                          fontSize: { xs: isPast ? '0.75rem' : '0.9rem', md: isPast ? '0.75rem' : '1rem' },
+                          fontWeight: { xs: isPast ? 500 : 600, md: isPast ? 500 : 600 },
                           color: '#4A5D3A',
-                          mb: { xs: 0, md: 0.5 }
+                          mb: { xs: 0, md: isPast ? 0 : 0.5 }
                         }}>
-                          <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
+                          <Box component="span" sx={{ display: { xs: 'inline', md: isPast ? 'inline' : 'none' } }}>
                             {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                           </Box>
-                          <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+                          <Box component="span" sx={{ display: { xs: 'none', md: isPast ? 'none' : 'inline' } }}>
                             {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' })}
                           </Box>
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ 
-                          fontSize: { xs: isPast ? '0.6rem' : '0.7rem', md: '0.85rem' }
+                          fontSize: { xs: isPast ? '0.6rem' : '0.7rem', md: isPast ? '0.6rem' : '0.85rem' }
                         }}>
-                          <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
+                          <Box component="span" sx={{ display: { xs: 'inline', md: isPast ? 'inline' : 'none' } }}>
                             {new Date(dayDate + 'T12:00:00').getDate()}
                           </Box>
-                          <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+                          <Box component="span" sx={{ display: { xs: 'none', md: isPast ? 'none' : 'inline' } }}>
                             {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
                               month: 'short', 
                               day: 'numeric',
@@ -292,27 +296,79 @@ export default function WeeklyTable({
                         )}
                       </Box>
                       
-                      {/* Mobile: Weather Icon */}
-                      <Box sx={{ fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: 0 }, display: { xs: 'block', md: 'none' } }}>
-                        {weatherIcon}
+                      {/* Mobile + Past Desktop: Weather Info */}
+                      <Box sx={{ 
+                        display: { xs: 'flex', md: isPast ? 'flex' : 'none' },
+                        alignItems: 'center',
+                        gap: 1
+                      }}>
+                        {/* Weather Icon */}
+                        <Box sx={{ fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: isPast ? '1.2rem' : 0 } }}>
+                          {debugMode ? (
+                            day.description.includes('rain') ? '🌧️' :
+                            day.description.includes('cloud') ? '☁️' :
+                            day.description.includes('clear') || day.description.includes('sun') ? '☀️' :
+                            day.description.includes('snow') ? '❄️' : '☀️'
+                          ) : (
+                            weather?.icon || weatherIcon
+                          )}
+                        </Box>
+                        
+                        {/* High Temperature */}
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: { xs: isPast ? '0.7rem' : '0.8rem', md: isPast ? '0.7rem' : 0 },
+                            fontWeight: 500,
+                            color: '#6B7B5C'
+                          }}
+                        >
+                          {(() => {
+                            if (debugMode && day.temp_max) {
+                              return `${Math.round(day.temp_max)}°`;
+                            } else if (weather?.temp) {
+                              // Parse "83°/58°F" format to get high temp
+                              const tempParts = weather.temp.split('/');
+                              if (tempParts.length === 2) {
+                                const high = parseFloat(tempParts[0]);
+                                if (!isNaN(high)) {
+                                  return `${Math.round(high)}°`;
+                                }
+                              }
+                            }
+                            // Fallback to raw data if available
+                            if (day.temp_max) {
+                              return `${Math.round(day.temp_max)}°`;
+                            }
+                            return '--°';
+                          })()}
+                        </Typography>
                       </Box>
                       
-                      {/* Mobile: Action Text */}
+                      {/* Mobile + Past Desktop: Action Text or Weather Info */}
                       <Typography 
                         variant="body2" 
                         sx={{ 
-                          color: actionColor,
-                          fontWeight: { xs: isPast ? 400 : 500, md: 0 },
-                          fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: 0 },
-                          display: { xs: 'block', md: 'none' }
+                          color: isPast ? '#6B7B5C' : actionColor,
+                          fontWeight: { xs: isPast ? 500 : 500, md: isPast ? 500 : 0 },
+                          fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : 0 },
+                          display: { xs: 'block', md: isPast ? 'block' : 'none' }
                         }}
                       >
-                        {actionText}
+                        {isPast ? (
+                          debugMode && day.description ? 
+                            day.description.charAt(0).toUpperCase() + day.description.slice(1) :
+                            weather?.description ? 
+                              weather.description.charAt(0).toUpperCase() + weather.description.slice(1) :
+                              'Past weather'
+                        ) : (
+                          actionText
+                        )}
                       </Typography>
                     </Box>
                     
                     {/* Desktop: Weather Section */}
-                    <Box flex={1} mx={3} sx={{ display: { xs: 'none', md: 'block' } }}>
+                    <Box flex={1} mx={3} sx={{ display: { xs: 'none', md: isPast ? 'none' : 'block' } }}>
                       {debugMode ? (
                         <Box display="flex" alignItems="center" gap={2}>
                           <Box sx={{ fontSize: '1.5rem' }}>
@@ -351,11 +407,18 @@ export default function WeeklyTable({
                       )}
                     </Box>
                     
-                    {/* Desktop: Decision Section & Mobile: Expand Icon */}
-                    <Box sx={{ minWidth: { xs: 'auto', md: 200 }, textAlign: { xs: 'center', md: 'right' } }}>
+                    {/* Desktop: Decision Section & Mobile + Past Desktop: Expand Icon */}
+                    <Box sx={{ 
+                      minWidth: { xs: 'auto', md: isPast ? 'auto' : 200 }, 
+                      textAlign: { xs: 'center', md: 'right' },
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: { xs: 'center', md: 'flex-end' },
+                      justifyContent: 'center'
+                    }}>
                       {/* Desktop Decision Badge */}
                       <Box 
-                        display={{ xs: 'none', md: !debugMode ? 'inline-flex' : 'none' }}
+                        display={{ xs: 'none', md: !debugMode && !isPast ? 'inline-flex' : 'none' }}
                         alignItems="center" 
                         gap={1}
                         sx={{
@@ -399,20 +462,20 @@ export default function WeeklyTable({
                         </Typography>
                       )}
                       
-                      {/* Mobile Expand Icon */}
+                      {/* Mobile + Past Desktop: Expand Icon */}
                       <Box sx={{ 
                         color: '#9E9E9E', 
-                        fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: 0 },
-                        display: { xs: 'block', md: 'none' }
+                        fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: isPast ? '1.2rem' : 0 },
+                        display: { xs: 'block', md: isPast ? 'block' : 'none' }
                       }}>
                         {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                       </Box>
                     </Box>
                   </Box>
                   
-                  {/* Mobile: Expanded View */}
+                  {/* Mobile + Past Desktop: Expanded View */}
                   {isExpanded && (
-                    <Box mt={2} pt={2} borderTop="1px solid #F0F3EC" sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <Box mt={2} pt={2} borderTop="1px solid #F0F3EC" sx={{ display: { xs: 'block', md: isPast ? 'block' : 'none' } }}>
                       {debugMode ? (
                         // Debug mode expanded content
                         <Grid container spacing={2}>

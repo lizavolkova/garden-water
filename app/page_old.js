@@ -510,7 +510,7 @@ export default function Home() {
                 label="Where do your green friends live?"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                placeholder="Where is your garden?"
+                placeholder="Enter Your Zip Code"
                 InputProps={{
                   startAdornment: <LocationOn sx={{ mr: 1, color: '#6B7B5C' }} />,
                 }}
