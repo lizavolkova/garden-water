@@ -15,7 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   BugReport 
 } from '@mui/icons-material';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { 
   getWateringDecision, 
   getFadedColor, 
@@ -34,7 +34,7 @@ export default function WeeklyTable({
 }) {
   const [expandedCards, setExpandedCards] = useState(new Set());
 
-  const toggleCardExpansion = (dayDate) => {
+  const toggleCardExpansion = useCallback((dayDate) => {
     setExpandedCards(prev => {
       const newSet = new Set(prev);
       if (newSet.has(dayDate)) {
@@ -44,7 +44,14 @@ export default function WeeklyTable({
       }
       return newSet;
     });
-  };
+  }, []);
+
+  const handleCardClick = useCallback((dayDate, isPast) => (e) => {
+    // Allow expansion: mobile for all cards, desktop only for past cards
+    if (window.innerWidth < 900 || (window.innerWidth >= 900 && isPast)) {
+      toggleCardExpansion(dayDate);
+    }
+  }, [toggleCardExpansion]);
 
   const data = useMemo(() => {
     return debugMode ? weatherData : wateringAdvice?.daily || [];
@@ -53,6 +60,15 @@ export default function WeeklyTable({
   const todayLocal = useMemo(() => {
     return isClient ? getLocalDateString() : null;
   }, [isClient]);
+
+  // Memoize today index calculation to avoid recalculating on every render
+  const todayIndex = useMemo(() => {
+    if (!todayLocal || !data.length) return -1;
+    return data.findIndex(d => {
+      const checkDate = debugMode ? d.date : d.date;
+      return todayLocal === checkDate;
+    });
+  }, [data, todayLocal, debugMode]);
   
   // Show loading spinner when loading and no data
   if (loading && (!data || data.length === 0)) {
@@ -187,13 +203,8 @@ export default function WeeklyTable({
             const weather = debugMode ? null : getWeatherDisplay(day.date);
             const isExpanded = expandedCards.has(dayDate);
             
-            // Calculate fade factor based on days from today
+            // Calculate fade factor based on days from today (using memoized todayIndex)
             const totalDays = data.length;
-            const todayIndex = data.findIndex(d => {
-              const checkDate = debugMode ? d.date : d.date;
-              return todayLocal && todayLocal === checkDate;
-            });
-            
             const fadeFactor = calculateFadeFactor(index, todayIndex, totalDays, isPast, debugMode);
             const { actionText, actionColor, weatherIcon, decisionBg } = getWateringDecision(day, isPast, debugMode);
             
@@ -202,13 +213,8 @@ export default function WeeklyTable({
             
             return (
               <Card
-                key={index}
-                onClick={(e) => {
-                  // Allow expansion: mobile for all cards, desktop only for past cards
-                  if (window.innerWidth < 900 || (window.innerWidth >= 900 && isPast)) {
-                    toggleCardExpansion(dayDate);
-                  }
-                }}
+                key={`${dayDate}-${debugMode}`}
+                onClick={handleCardClick(dayDate, isPast)}
                 sx={{
                   mb: 1,
                   cursor: { xs: 'pointer', md: isPast ? 'pointer' : 'default' },
