@@ -32,7 +32,6 @@ export default function Home() {
   const [temperatureUnit, setTemperatureUnit] = useState('fahrenheit');
   const [weatherAPI, setWeatherAPI] = useState('visualcrossing');
   const [debugMode, setDebugMode] = useState(false);
-  const [isDebugMode, setIsDebugMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   // Set up client-side rendering flag
@@ -47,7 +46,6 @@ export default function Home() {
       const debugParam = urlParams.get('debug');
       const isDebug = debugParam === 'true';
       setDebugMode(isDebug);
-      setIsDebugMode(isDebug);
       
       // Load saved ZIP code
       const savedZip = localStorage.getItem('gardenWateringZipCode');
@@ -57,11 +55,6 @@ export default function Home() {
     }
   }, []);
 
-  const getTodaysRecommendation = () => {
-    if (!wateringAdvice?.daily) return null;
-    
-    return wateringAdvice.daily.find(day => isToday(day.date));
-  };
 
   const getWeatherDisplay = useCallback((date) => {
     if (!weatherData) return null;
@@ -80,14 +73,14 @@ export default function Home() {
     return {
       icon: getWeatherIcon(),
       temp: temperatureUnit === 'celsius' ? 
-        `${Math.round(convertFahrenheitToCelsius(weatherDay.temp_max))}°C` : 
-        `${Math.round(weatherDay.temp_max)}°F`,
+        `${Math.round(convertFahrenheitToCelsius(weatherDay.temp_max))}°/${Math.round(convertFahrenheitToCelsius(weatherDay.temp_min))}°C` : 
+        `${Math.round(weatherDay.temp_max)}°/${Math.round(weatherDay.temp_min)}°F`,
       description: weatherDay.description,
       rain: weatherDay.rain > 0.1 ? weatherDay.rain.toFixed(1) : null
     };
   }, [weatherData, temperatureUnit]);
 
-  const fetchWeatherAndAdvice = async (forceRefresh = false) => {
+  const fetchWeatherAndAdvice = useCallback(async (forceRefresh = false) => {
     if (!zipCode.trim()) {
       setError('Please enter a ZIP code');
       return;
@@ -164,14 +157,14 @@ export default function Home() {
       setLoading(false);
       setInitialLoad(false);
     }
-  };
+  }, [zipCode, debugMode, weatherAPI, initialLoad]);
 
   // Auto-load on mount if we have a saved ZIP code
   useEffect(() => {
     if (zipCode && initialLoad && isClient) {
       fetchWeatherAndAdvice(false);
     }
-  }, [zipCode, initialLoad, isClient, debugMode]);
+  }, [zipCode, initialLoad, isClient, fetchWeatherAndAdvice]);
 
   return (
     <>
@@ -209,7 +202,7 @@ export default function Home() {
 
         <TodayAdviceCard 
           todayAdvice={todayAdvice} 
-          isDebugMode={isDebugMode} 
+          isDebugMode={debugMode} 
         />
 
         <WeeklyTable 

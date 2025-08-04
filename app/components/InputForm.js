@@ -90,7 +90,7 @@ export default function InputForm({
               }
             }}
           >
-            {loading ? 'Consulting gnome wisdom...' : debugMode ? 'Check Weather' : 'Ask the Gnome'}
+            {loading ? 'Consulting gnome wisdom...' : debugMode ? 'Check Weather' : 'Ask Wynn'}
           </Button>
         </Box>
       </CardContent>

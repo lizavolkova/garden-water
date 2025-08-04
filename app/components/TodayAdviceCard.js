@@ -1,34 +1,37 @@
 'use client';
 
 import { Card, CardContent, Box, Typography, Chip } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
   const [selectedCopy, setSelectedCopy] = useState(null);
   
+  // Memoize copy variations to avoid recreating on every render
+  const copyVariations = useMemo(() => ({
+    yes: [
+      { title: 'The garden is thirsty!' },
+      { title: `Let's get watering!` }
+    ],
+    maybe: [
+      { title: `Let's ask the soil.` },
+      { title: 'Check soil moisture' }
+    ],
+    no: [
+      { title: 'Let the garden rest today!' },
+      { title: 'Skip watering today' }
+    ]
+  }), []);
+
   // Select random copy variation when todayAdvice changes
   useEffect(() => {
     if (todayAdvice) {
-      const copyVariations = {
-        yes: [
-          { title: 'The garden is thirsty!' },
-          { title: `Let's get watering!` }
-        ],
-        maybe: [
-          { title: `Let's ask the soil.` },
-          { title: 'Check soil moisture' }
-        ],
-        no: [
-          { title: 'Let the garden rest today!' },
-          { title: 'Skip watering today' }
-        ]
-      };
-      
       const variations = copyVariations[todayAdvice.shouldWater] || copyVariations.no;
       const randomIndex = Math.floor(Math.random() * variations.length);
       setSelectedCopy(variations[randomIndex]);
+    } else {
+      setSelectedCopy(null);
     }
-  }, [todayAdvice]);
+  }, [todayAdvice, copyVariations]);
   
   if (!todayAdvice || !selectedCopy) return null;
 
