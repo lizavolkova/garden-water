@@ -52,16 +52,12 @@ export default function MobileMenu({
         <IconButton
           onClick={handleMenuToggle}
           sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
+            bgcolor: 'transparent',
             borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(107, 123, 92, 0.15)',
-            border: '1px solid rgba(107, 123, 92, 0.1)',
             width: 48,
             height: 48,
             '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 1)',
-              boxShadow: '0 6px 24px rgba(107, 123, 92, 0.2)',
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
             }
           }}
         >
@@ -95,7 +91,7 @@ export default function MobileMenu({
             <Typography variant="h6" sx={{ 
               color: '#4A5D3A', 
               fontWeight: 500,
-              fontFamily: 'var(--font-literata), "Times New Roman", serif'
+              fontFamily: 'var(--font-heading)'
             }}>
               Settings
             </Typography>

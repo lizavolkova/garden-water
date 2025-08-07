@@ -713,8 +713,7 @@ export default function Home() {
                     fontSize: { xs: '1.1rem', sm: '1.3rem' },
                     mb: 1,
                     color: todayAdvice.shouldWater === 'yes' ? '#4A6B7A' : 
-                           todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A',
-                    fontFamily: 'serif'
+                           todayAdvice.shouldWater === 'maybe' ? '#8B7355' : '#4A5D3A'
                   }}>
                     {todayAdvice.shouldWater === 'yes' ? 'Time for a drink!' : 
                      todayAdvice.shouldWater === 'maybe' ? 'Maybe a little sip?' : 

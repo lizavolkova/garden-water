@@ -233,11 +233,11 @@ export default function Home() {
             xs: 'url(/mobile-background-new.png)', // Mobile background
             lg: 'url(/floral-background.png)'  // Desktop background  
           },
-          backgroundSize: 'cover',
+          backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'fixed',
           backgroundPositionY: {
-            xs: '-262px', // Mobile background vertical position
+            xs: '-118px', // Mobile background vertical position
             lg: 'center'  // Desktop background stays centered
           },
           py: 4,
@@ -377,7 +377,7 @@ export default function Home() {
                       size={48} 
                       sx={{ color: 'white' }}
                     />
-                    <Typography sx={{ color: 'white', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-literata), "Times New Roman", serif' }}>
+                    <Typography sx={{ color: 'white', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
                       Consulting with Wynn's gnome wisdom...
                     </Typography>
                   </Box>

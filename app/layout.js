@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Literata } from "next/font/google";
+import { Geist, Geist_Mono, Literata, Cinzel_Decorative } from "next/font/google";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -21,6 +21,12 @@ const literata = Literata({
   weight: ["200", "300", "400", "500", "600", "700"],
 });
 
+const cinzelDecorative = Cinzel_Decorative({
+  variable: "--font-cinzel-decorative",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+});
+
 export const metadata = {
   title: "Garden Watering Assistant",
   description: "AI-powered garden watering recommendations based on weather forecast",
@@ -33,7 +39,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${cinzelDecorative.variable} antialiased`}
         id="__next"
       >
         <AppRouterCacheProvider>

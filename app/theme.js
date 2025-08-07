@@ -46,35 +46,53 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'var(--font-literata), "Times New Roman", serif',
+    fontFamily: 'var(--font-body)', // Default to body font
     h1: {
+      fontFamily: 'var(--font-heading)',
       fontSize: '3rem',
-      fontWeight: 300,
+      fontWeight: 400,
       letterSpacing: '0.05em',
       color: '#14532d', // garden-900
     },
     h2: {
+      fontFamily: 'var(--font-heading)',
       fontSize: '2rem',
-      fontWeight: 300,
+      fontWeight: 400,
       letterSpacing: '0.025em',
       color: '#166534', // garden-800
     },
     h3: {
+      fontFamily: 'var(--font-heading)',
       fontSize: '1.5rem',
       fontWeight: 400,
       color: '#166534', // garden-800
     },
     h4: {
+      fontFamily: 'var(--font-heading)',
       fontSize: '1.25rem',
-      fontWeight: 500,
+      fontWeight: 400,
+      color: '#15803d', // garden-700
+    },
+    h5: {
+      fontFamily: 'var(--font-heading)',
+      fontSize: '1.1rem',
+      fontWeight: 400,
+      color: '#15803d', // garden-700
+    },
+    h6: {
+      fontFamily: 'var(--font-heading)',
+      fontSize: '1rem',
+      fontWeight: 400,
       color: '#15803d', // garden-700
     },
     body1: {
+      fontFamily: 'var(--font-body)',
       fontSize: '1rem',
       lineHeight: 1.6,
       color: '#475569', // slate-600
     },
     body2: {
+      fontFamily: 'var(--font-body)',
       fontSize: '0.875rem',
       lineHeight: 1.5,
       color: '#64748b', // slate-500
@@ -86,6 +104,22 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        ':root': {
+          // Font variables for easy experimentation
+          // To test different combinations, simply change these variables:
+          // 
+          // CURRENT: Cinzel Decorative (headings) + Literata (body)
+          '--font-heading': '"Cinzel Decorative", "Times New Roman", serif',
+          '--font-body': '"Literata", "Times New Roman", serif',
+          //
+          // OTHER OPTIONS to try:
+          // '--font-heading': '"Literata", "Times New Roman", serif', // All Literata
+          // '--font-body': '"Literata", "Times New Roman", serif',
+          //
+          // Or use CSS variables (after ensuring fonts are loaded):
+          // '--font-heading': 'var(--font-cinzel-decorative)',
+          // '--font-body': 'var(--font-literata)',
+        },
         body: {
           background: 'linear-gradient(135deg, #fbf8f4 0%, #faf5f0 25%, #f0fdf4 100%)',
           minHeight: '100vh',
@@ -100,7 +134,7 @@ const theme = createTheme({
           padding: '12px 24px',
           fontSize: '1rem',
           fontWeight: 600,
-          fontFamily: 'var(--font-literata), "Times New Roman", serif',
+          fontFamily: 'var(--font-body)',
           boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.25)',
           '&:hover': {
             boxShadow: '0 6px 20px 0 rgba(34, 197, 94, 0.35)',

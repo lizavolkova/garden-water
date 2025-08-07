@@ -47,7 +47,7 @@ export default function InputForm({
                 size={48} 
                 sx={{ color: 'white' }}
               />
-              <Box sx={{ color: 'white', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-literata), "Times New Roman", serif' }}>
+              <Box sx={{ color: 'white', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
                 Consulting with Wynn's gnome wisdom...
               </Box>
             </Box>

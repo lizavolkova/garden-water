@@ -23,7 +23,7 @@ export default function GnomeCharacter({
     <Box
       sx={{
         display: 'flex',
-        justifyContent: variant === 'mobile' ? 'flex-start' : 'center',
+        justifyContent: variant === 'mobile' ? 'flex-end' : 'center',
         alignItems: variant === 'mobile' ? 'flex-start' : 'flex-start',
         position: 'relative',
         zIndex: 10,
