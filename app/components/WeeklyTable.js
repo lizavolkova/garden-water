@@ -485,25 +485,25 @@ export default function WeeklyTable({
                       {debugMode ? (
                         // Debug mode expanded content
                         <Grid container spacing={2}>
-                          <Grid item xs={6}>
+                          <Grid size={6}>
                             <Typography variant="caption" color="text.secondary">Temperature</Typography>
                             <Typography variant="body2" fontWeight={600}>
                               {Math.round(day.temp_max)}°/{Math.round(day.temp_min)}°
                             </Typography>
                           </Grid>
-                          <Grid item xs={6}>
+                          <Grid size={6}>
                             <Typography variant="caption" color="text.secondary">Humidity</Typography>
                             <Typography variant="body2" fontWeight={600}>
                               {day.humidity}%
                             </Typography>
                           </Grid>
-                          <Grid item xs={6}>
+                          <Grid size={6}>
                             <Typography variant="caption" color="text.secondary">Rain</Typography>
                             <Typography variant="body2" fontWeight={600} color={day.rain > 0.1 ? 'info.main' : 'text.secondary'}>
                               {day.rain.toFixed(2)}&quot;
                             </Typography>
                           </Grid>
-                          <Grid item xs={6}>
+                          <Grid size={6}>
                             <Typography variant="caption" color="text.secondary">Conditions</Typography>
                             <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                               {day.description}
@@ -552,17 +552,17 @@ export default function WeeklyTable({
                   {debugMode && (
                     <Box mt={2} sx={{ display: { xs: 'none', md: 'block' } }}>
                       <Grid container spacing={2}>
-                        <Grid item xs={3}>
+                        <Grid size={3}>
                           <Typography variant="caption" color="text.secondary">Humidity</Typography>
                           <Typography variant="body2" fontWeight={600}>{day.humidity}%</Typography>
                         </Grid>
-                        <Grid item xs={3}>
+                        <Grid size={3}>
                           <Typography variant="caption" color="text.secondary">Rain</Typography>
                           <Typography variant="body2" fontWeight={600} color={day.rain > 0.1 ? 'info.main' : 'text.secondary'}>
                             {day.rain.toFixed(2)}&quot;
                           </Typography>
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid size={6}>
                           <Typography variant="caption" color="text.secondary">Full Description</Typography>
                           <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                             {day.description}

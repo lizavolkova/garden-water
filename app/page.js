@@ -6,14 +6,30 @@ import {
   Container,
   Alert,
   Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip,
 } from '@mui/material';
+import { WaterDrop, Thermostat } from '@mui/icons-material';
 
 // Import components
 import Header from './components/Header';
 import InputForm from './components/InputForm';
+import NavHeader from './components/NavHeader';
+import MobileMenu from './components/MobileMenu';
+import IntroText from './components/IntroText';
 import TodayAdviceCard from './components/TodayAdviceCard';
 import WeeklyTable from './components/WeeklyTable';
 import Disclaimer from './components/Disclaimer';
+import GnomeCharacter from './components/GnomeCharacter';
+import MobileLayoutSection from './components/MobileLayoutSection';
 
 // Import utilities
 import { getLocalDateString, isToday, isPastDate } from './utils/dateUtils';
@@ -91,7 +107,7 @@ export default function Home() {
     setError(null);
     
     // Clear existing data when user manually requests new data
-    if (forceRefresh || !initialLoad) {
+    if (forceRefresh) {
       setWeatherData(null);
       setWateringAdvice(null);
       setTodayAdvice(null);
@@ -159,65 +175,264 @@ export default function Home() {
     }
   }, [zipCode, debugMode, weatherAPI, initialLoad]);
 
-  // Auto-load on mount if we have a saved ZIP code
+  // Load cached data on page load, but don't fetch from API unless user clicks button
   useEffect(() => {
     if (zipCode && initialLoad && isClient) {
-      fetchWeatherAndAdvice(false);
+      // Only check cache, don't fetch from API
+      const zip = zipCode.trim();
+      const cachedData = getCachedData(zip);
+      if (cachedData) {
+        setWeatherData(cachedData.weather);
+        if (!debugMode && cachedData.advice) {
+          setWateringAdvice(cachedData.advice);
+          setTodayAdvice(cachedData.todayAdvice || null);
+        } else if (debugMode) {
+          setWateringAdvice(null);
+          setTodayAdvice(null);
+        }
+      }
+      setInitialLoad(false);
     }
-  }, [zipCode, initialLoad, isClient, fetchWeatherAndAdvice]);
+  }, [zipCode, initialLoad, isClient, debugMode]);
 
   return (
     <>
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <title>Water Gnome - Your Garden Watering Expert</title>
-        <meta name="description" content="Meet Water Gnome, your friendly garden companion who provides expert watering advice based on weather patterns" />
-
-        <Header 
-          temperatureUnit={temperatureUnit} 
-          setTemperatureUnit={setTemperatureUnit} 
-        />
-
-        <InputForm 
+      <title>Water Gnome - Your Garden Watering Expert</title>
+      <meta name="description" content="Meet Water Gnome, your friendly garden companion who provides expert watering advice based on weather patterns" />
+      
+      {/* Desktop Nav Header - Only show when data exists */}
+      {(weatherData || wateringAdvice) && (
+        <NavHeader 
           zipCode={zipCode}
           setZipCode={setZipCode}
           loading={loading}
-          debugMode={debugMode}
           fetchWeatherAndAdvice={fetchWeatherAndAdvice}
+          temperatureUnit={temperatureUnit}
+          setTemperatureUnit={setTemperatureUnit}
         />
+      )}
 
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 4,
-              borderRadius: '8px',
-              '& .MuiAlert-message': {
-                width: '100%'
-              }
-            }}
-          >
-            <Typography sx={{ color: '#A0725C' }}>{error}</Typography>
-          </Alert>
-        )}
-
-        <TodayAdviceCard 
-          todayAdvice={todayAdvice} 
-          isDebugMode={debugMode} 
-        />
-
-        <WeeklyTable 
-          weatherData={weatherData}
-          wateringAdvice={wateringAdvice}
-          debugMode={debugMode}
-          weatherAPI={weatherAPI}
-          getWeatherDisplay={getWeatherDisplay}
-          isClient={isClient}
+      {/* Mobile Menu - Only show when data exists */}
+      {(weatherData || wateringAdvice) && (
+        <MobileMenu 
+          zipCode={zipCode}
+          setZipCode={setZipCode}
           loading={loading}
+          fetchWeatherAndAdvice={fetchWeatherAndAdvice}
+          temperatureUnit={temperatureUnit}
+          setTemperatureUnit={setTemperatureUnit}
         />
+      )}
 
-        <Disclaimer />
+      {/* Responsive Floral Background Section */}
+      <Box
+        sx={{
+          position: 'relative',
+          minHeight: '100vh',
+          backgroundImage: {
+            xs: 'url(/mobile-background.png)', // Mobile background
+            lg: 'url(/floral-background.png)'  // Desktop background  
+          },
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          py: 4,
+          pt: { 
+            xs: 4, // Mobile padding
+            lg: (weatherData || wateringAdvice) ? 8 : 4 // Desktop padding - more when nav present
+          },
+        }}
+      >
+        {/* Desktop Layout */}
+        <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+          <Container maxWidth="xl">
+            {/* Dynamic Header Section */}
+            <Grid container spacing={6} alignItems="center" justifyContent="center">
+              {/* Left Column - Conditional Content */}
+              <Grid size={{ xs: 12, lg: 9 }}>
+                <Box sx={{ maxWidth: 500, textAlign: 'center' }}>
+                  {/* Consistent Card Container */}
+                  <Card 
+                    sx={{ 
+                      mb: 4,
+                      bgcolor: '#FFFFFF',
+                      borderRadius: '16px',
+                      boxShadow: '0 8px 32px rgba(107, 123, 92, 0.15)',
+                      border: '1px solid rgba(255, 255, 255, 0.8)',
+                      minHeight: 400, // Consistent minimum height
+                    }}
+                  >
+                    <CardContent sx={{ p: 4, minHeight: 320 }}>
+                      {loading ? (
+                        // Loading State - Show spinner
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: '100%', minHeight: 320 }}>
+                          <CircularProgress 
+                            size={48} 
+                            sx={{ color: '#6B7B5C' }}
+                          />
+                          <Typography sx={{ color: '#7A8471', fontStyle: 'italic', textAlign: 'center' }}>
+                            Consulting with Wynn's gnome wisdom...
+                          </Typography>
+                        </Box>
+                      ) : (!weatherData && !wateringAdvice) ? (
+                        // New User Experience - Header + Input Form
+                        <>
+                          <Header 
+                            temperatureUnit={temperatureUnit} 
+                            setTemperatureUnit={setTemperatureUnit}
+                          />
+                          
+                          <InputForm 
+                            zipCode={zipCode}
+                            setZipCode={setZipCode}
+                            loading={loading}
+                            debugMode={debugMode}
+                            fetchWeatherAndAdvice={fetchWeatherAndAdvice}
+                          />
+                        </>
+                      ) : (
+                        // Returning User Experience - Today's Wisdom Card Content
+                        <Box sx={{ height: '100%' }}>
+                          <TodayAdviceCard 
+                            todayAdvice={todayAdvice} 
+                            isDebugMode={debugMode} 
+                            compact={true}
+                          />
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
 
-      </Container>
+                  {error && (
+                    <Alert 
+                      severity="error" 
+                      sx={{ 
+                        mb: 4,
+                        borderRadius: '8px',
+                        '& .MuiAlert-message': {
+                          width: '100%'
+                        }
+                      }}
+                    >
+                      <Typography sx={{ color: '#A0725C' }}>{error}</Typography>
+                    </Alert>
+                  )}
+                </Box>
+              </Grid>
+
+              {/* Right Column - Gnome Character */}
+              <Grid size={{ xs: 12, lg: 3 }}>
+                <GnomeCharacter 
+                  variant="desktop"
+                  sx={{
+                    pt: 4,
+                    zIndex: 40
+                  }}
+                />
+              </Grid>
+            </Grid>
+
+
+            {/* Weekly Table - Full Width */}
+            <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+              <WeeklyTable 
+                weatherData={weatherData}
+                wateringAdvice={wateringAdvice}
+                debugMode={debugMode}
+                weatherAPI={weatherAPI}
+                getWeatherDisplay={getWeatherDisplay}
+                isClient={isClient}
+                loading={loading}
+              />
+
+              <Disclaimer />
+            </Box>
+          </Container>
+        </Box>
+
+        {/* Mobile Layout */}
+        <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
+          <Container maxWidth="md" sx={{ py: 2 }}>
+          {/* Conditional Content based on data availability */}
+          {loading ? (
+            // Loading State - Show spinner
+            <MobileLayoutSection>
+              <Card 
+                sx={{ 
+                  mb: 4,
+                  bgcolor: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 32px rgba(107, 123, 92, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  minHeight: 160,
+                }}
+              >
+                <CardContent sx={{ p: 3, pt: 4 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: '100%', minHeight: 120 }}>
+                    <CircularProgress 
+                      size={48} 
+                      sx={{ color: '#6B7B5C' }}
+                    />
+                    <Typography sx={{ color: '#7A8471', fontStyle: 'italic', textAlign: 'center' }}>
+                      Consulting with Wynn's gnome wisdom...
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </MobileLayoutSection>
+          ) : (!weatherData && !wateringAdvice) ? (
+            // New User Experience - Header Text + Gnome + Input Form
+            <MobileLayoutSection>
+              <InputForm 
+                zipCode={zipCode}
+                setZipCode={setZipCode}
+                loading={loading}
+                debugMode={debugMode}
+                fetchWeatherAndAdvice={fetchWeatherAndAdvice}
+              />
+            </MobileLayoutSection>
+          ) : (
+            // Returning User Experience - Header Text + Gnome + Today's Wisdom Card
+            <>
+              <MobileLayoutSection contentProps={{ mb: 4 }}>
+                <TodayAdviceCard 
+                  todayAdvice={todayAdvice} 
+                  isDebugMode={debugMode} 
+                />
+              </MobileLayoutSection>
+
+              <WeeklyTable 
+                weatherData={weatherData}
+                wateringAdvice={wateringAdvice}
+                debugMode={debugMode}
+                weatherAPI={weatherAPI}
+                getWeatherDisplay={getWeatherDisplay}
+                isClient={isClient}
+                loading={loading}
+              />
+
+              <Disclaimer />
+            </>
+          )}
+
+          {/* Error Alert - Show regardless of state */}
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 4,
+                borderRadius: '8px',
+                '& .MuiAlert-message': {
+                  width: '100%'
+                }
+              }}
+            >
+              <Typography sx={{ color: '#A0725C' }}>{error}</Typography>
+            </Alert>
+          )}
+          </Container>
+        </Box>
+      </Box>
     </>
   );
 }
