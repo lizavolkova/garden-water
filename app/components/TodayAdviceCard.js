@@ -44,10 +44,10 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
             variant="h4" 
             component="h2" 
             sx={{
-              color: '#4A5D3A',
+              color: 'white',
               fontWeight: 500,
               fontSize: { xs: '1.3rem', sm: '1.5rem' },
-              fontFamily: 'serif',
+              fontFamily: 'var(--font-literata), "Times New Roman", serif',
               mb: 3,
               textAlign: 'center'
             }}
@@ -118,7 +118,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
                   fontWeight: 600,
                   fontSize: { xs: '1.2rem', sm: '1.3rem' },
                   mb: 2,
-                  color: '#4A5D3A',
+                  color: 'white',
                   fontFamily: 'serif'
                 }}
               >
@@ -129,7 +129,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
               <Typography 
                 variant="body1" 
                 sx={{ 
-                  color: '#7A8471',
+                  color: 'rgba(255, 255, 255, 0.9)',
                   lineHeight: 1.6,
                   fontSize: { xs: '0.9rem', sm: '0.95rem' },
                   mb: 2
@@ -143,7 +143,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: '#7A8471',
+                    color: 'rgba(255, 255, 255, 0.8)',
                     lineHeight: 1.5,
                     fontSize: { xs: '0.85rem', sm: '0.9rem' },
                     fontStyle: 'italic'
@@ -160,20 +160,20 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
         <Card 
           sx={{ 
             mb: 4, 
-            bgcolor: '#FEFFFE',
+            bgcolor: '#4A5D3A',
             borderRadius: '12px',
             boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
-            border: '1.5px solid #E8EDE4'
+            border: '1.5px solid #5A6B4D'
           }}>
           <CardContent sx={{ p: { xs: 3, md: 4 } }}>
             <Typography 
               variant="h4" 
               component="h2" 
               sx={{
-                color: '#4A5D3A',
+                color: 'white',
                 fontWeight: 500,
                 fontSize: { xs: '1.3rem', sm: '1.5rem' },
-                fontFamily: 'serif',
+                fontFamily: 'var(--font-literata), "Times New Roman", serif',
                 mb: 3
               }}
             >
@@ -243,7 +243,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
                     fontWeight: 600,
                     fontSize: { xs: '1.3rem', sm: '1.5rem' },
                     mb: 2,
-                    color: '#4A5D3A',
+                    color: 'white',
                     fontFamily: 'serif'
                   }}
                 >
@@ -254,7 +254,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
                 <Typography 
                   variant="body1" 
                   sx={{ 
-                    color: '#7A8471',
+                    color: 'rgba(255, 255, 255, 0.9)',
                     lineHeight: 1.6,
                     fontSize: { xs: '0.95rem', sm: '1rem' },
                     mb: 2
@@ -268,7 +268,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode, compact = fa
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      color: '#7A8471',
+                      color: 'rgba(255, 255, 255, 0.8)',
                       lineHeight: 1.5,
                       fontSize: { xs: '0.9rem', sm: '0.95rem' },
                       fontStyle: 'italic'

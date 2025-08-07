@@ -230,12 +230,16 @@ export default function Home() {
           position: 'relative',
           minHeight: '100vh',
           backgroundImage: {
-            xs: 'url(/mobile-background.png)', // Mobile background
+            xs: 'url(/mobile-background-new.png)', // Mobile background
             lg: 'url(/floral-background.png)'  // Desktop background  
           },
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'fixed',
+          backgroundPositionY: {
+            xs: '-262px', // Mobile background vertical position
+            lg: 'center'  // Desktop background stays centered
+          },
           py: 4,
           pt: { 
             xs: 4, // Mobile padding
@@ -360,10 +364,10 @@ export default function Home() {
               <Card 
                 sx={{ 
                   mb: 4,
-                  bgcolor: '#FFFFFF',
+                  bgcolor: '#4A5D3A',
                   borderRadius: '16px',
                   boxShadow: '0 8px 32px rgba(107, 123, 92, 0.15)',
-                  border: '1px solid rgba(255, 255, 255, 0.8)',
+                  border: '1px solid #5A6B4D',
                   minHeight: 160,
                 }}
               >
@@ -371,9 +375,9 @@ export default function Home() {
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: '100%', minHeight: 120 }}>
                     <CircularProgress 
                       size={48} 
-                      sx={{ color: '#6B7B5C' }}
+                      sx={{ color: 'white' }}
                     />
-                    <Typography sx={{ color: '#7A8471', fontStyle: 'italic', textAlign: 'center' }}>
+                    <Typography sx={{ color: 'white', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-literata), "Times New Roman", serif' }}>
                       Consulting with Wynn's gnome wisdom...
                     </Typography>
                   </Box>

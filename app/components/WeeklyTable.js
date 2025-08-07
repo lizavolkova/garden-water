@@ -125,7 +125,7 @@ export default function WeeklyTable({
                     color: 'warning.main',
                     fontWeight: 500,
                     fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                    fontFamily: 'serif'
+                    fontFamily: 'var(--font-literata), "Times New Roman", serif'
                   }}
                 >
                   Gnome&apos;s Weather Notes
@@ -147,7 +147,7 @@ export default function WeeklyTable({
                 color: '#4A5D3A',
                 fontWeight: 500,
                 fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                fontFamily: 'serif'
+                fontFamily: 'var(--font-literata), "Times New Roman", serif'
               }}
             >
               A Peek at the Week Ahead
@@ -167,7 +167,7 @@ export default function WeeklyTable({
             }}
           >
             <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#4A5D3A', fontFamily: 'serif' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#4A5D3A', fontFamily: 'var(--font-literata), "Times New Roman", serif' }}>
                 Wynn&apos;s Weekly Wisdom
               </Typography>
             </Box>

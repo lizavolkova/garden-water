@@ -95,7 +95,7 @@ export default function MobileMenu({
             <Typography variant="h6" sx={{ 
               color: '#4A5D3A', 
               fontWeight: 500,
-              fontFamily: 'serif'
+              fontFamily: 'var(--font-literata), "Times New Roman", serif'
             }}>
               Settings
             </Typography>

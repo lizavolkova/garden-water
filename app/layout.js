@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Literata } from "next/font/google";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600", "700"],
+});
+
 export const metadata = {
   title: "Garden Watering Assistant",
   description: "AI-powered garden watering recommendations based on weather forecast",
@@ -27,7 +33,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} antialiased`}
         id="__next"
       >
         <AppRouterCacheProvider>

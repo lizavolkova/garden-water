@@ -9,13 +9,13 @@ export default function IntroText() {
         variant="h1" 
         component="h1" 
         sx={{
-          fontWeight: { xs: 600, lg: 500 },
+          fontWeight: 200,
           fontSize: { xs: '2.5rem', sm: '3rem', md: '3.2rem' },
           lineHeight: 1.1,
           letterSpacing: '0.01em',
           mb: 2,
-          fontFamily: '"Playfair Display", "Times New Roman", serif',
-          color: { xs: '#000000', lg: '#4A5D3A' },
+          fontFamily: 'var(--font-literata), "Times New Roman", serif',
+          color: '#3f2a14',
           maxWidth: 'sm',
           mx: 'auto'
         }}
@@ -26,11 +26,11 @@ export default function IntroText() {
       <Typography 
         variant="body1" 
         sx={{
-          fontWeight: 400,
+          fontWeight: 200,
           lineHeight: 1.6,
           fontSize: { xs: '1rem', sm: '1.1rem', lg: '1rem' },
-          fontFamily: '"Georgia", "Times New Roman", serif',
-          color: { xs: '#000000', lg: '#7A8471' },
+          fontFamily: 'var(--font-literata), "Times New Roman", serif',
+          color: '#3f2a14',
           fontStyle: { xs: 'normal', lg: 'italic' },
           maxWidth: 'sm',
           mx: 'auto'

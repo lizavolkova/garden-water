@@ -46,7 +46,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'var(--font-geist-sans), system-ui, -apple-system, sans-serif',
+    fontFamily: 'var(--font-literata), "Times New Roman", serif',
     h1: {
       fontSize: '3rem',
       fontWeight: 300,
@@ -100,6 +100,7 @@ const theme = createTheme({
           padding: '12px 24px',
           fontSize: '1rem',
           fontWeight: 600,
+          fontFamily: 'var(--font-literata), "Times New Roman", serif',
           boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.25)',
           '&:hover': {
             boxShadow: '0 6px 20px 0 rgba(34, 197, 94, 0.35)',
