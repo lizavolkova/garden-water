@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardContent, Box, TextField, Button, CircularProgress, Typography } from '@mui/material';
+import { Card, CardContent, Box, TextField, Button, Typography } from '@mui/material';
 import { LocationOn, WaterDrop } from '@mui/icons-material';
+import Image from 'next/image';
 
 export default function InputForm({ 
   zipCode, 
@@ -57,9 +58,12 @@ export default function InputForm({
                 gap: 2
               }}
             >
-              <CircularProgress 
-                size={48} 
-                sx={{ color: '#5A6B4D' }}
+              <Image
+                src="/loading-spinner.gif"
+                alt="Loading..."
+                width={48}
+                height={48}
+                unoptimized
               />
               <Box sx={{ color: '#5A6B4D', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
                 Consulting with Wynn's gnome wisdom...

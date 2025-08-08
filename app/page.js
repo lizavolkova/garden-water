@@ -111,21 +111,17 @@ export default function Home() {
     const weatherDay = weatherData.find(day => day.date === date);
     if (!weatherDay) return null;
     
-    const getWeatherIcon = () => {
-      if (weatherDay.description.includes('rain')) return '🌧️';
-      if (weatherDay.description.includes('cloud')) return '☁️';
-      if (weatherDay.description.includes('clear') || weatherDay.description.includes('sun')) return '☀️';
-      if (weatherDay.description.includes('snow')) return '❄️';
-      return '☀️';
+    const getWeatherIconPath = () => {
+      return getWeatherIcon(weatherDay.description, weatherDay.temp_max);
     };
     
     return {
-      icon: getWeatherIcon(),
+      icon: getWeatherIconPath(),
       temp: temperatureUnit === 'celsius' ? 
         `${Math.round(convertFahrenheitToCelsius(weatherDay.temp_max))}°/${Math.round(convertFahrenheitToCelsius(weatherDay.temp_min))}°C` : 
         `${Math.round(weatherDay.temp_max)}°/${Math.round(weatherDay.temp_min)}°F`,
       description: weatherDay.description,
-      rain: weatherDay.rain > 0.1 ? weatherDay.rain.toFixed(1) : null
+      rain: weatherDay.rain || 0
     };
   }, [weatherData, temperatureUnit]);
 
@@ -411,20 +407,23 @@ export default function Home() {
               <Card 
                 sx={{ 
                   mb: 4,
-                  bgcolor: '#4A5D3A',
-                  borderRadius: '16px',
-                  boxShadow: '0 8px 32px rgba(107, 123, 92, 0.15)',
-                  border: '1px solid #5A6B4D',
+                  bgcolor: '#dfdbc7',
+                  borderRadius: '0',
+                  boxShadow: 'none',
+                  border: 'none',
                   minHeight: 160,
                 }}
               >
                 <CardContent sx={{ p: 3, pt: 4 }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: '100%', minHeight: 120 }}>
-                    <CircularProgress 
-                      size={48} 
-                      sx={{ color: 'white' }}
+                    <Image
+                      src="/loading-spinner.gif"
+                      alt="Loading..."
+                      width={60}
+                      height={60}
+                      unoptimized
                     />
-                    <Typography sx={{ color: 'white', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
+                    <Typography sx={{ color: '#4d5239', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
                       Consulting with Wynn's gnome wisdom...
                     </Typography>
                   </Box>

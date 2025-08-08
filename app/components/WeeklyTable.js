@@ -1,5 +1,38 @@
 'use client';
 
+// SEASONAL THEME CONFIGURATION
+// Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasons
+const CURRENT_SEASON = 'summer';
+
+// Seasonal color configuration for cards
+const getSeasonalColors = (season) => {
+  const seasonalPalettes = {
+    spring: {
+      yes: '#e8eeff',
+      maybe: '#efe2ab', 
+      no: '#cad597'
+    },
+    summer: {
+      yes: '#ddf4ff',
+      maybe: '#fff2cc',
+      no: '#e1f5d0'
+    },
+    fall: {
+      yes: '#f9e8d4',
+      maybe: '#f4d4a7',
+      no: '#d9c7a3'
+    },
+    winter: {
+      yes: '#e8f4fd',
+      maybe: '#f0f4f8',
+      no: '#dde7f0'
+    }
+  };
+  
+  // Fallback to summer colors if season not found
+  return seasonalPalettes[season] || seasonalPalettes.summer;
+};
+
 import { 
   Box, 
   Card, 
@@ -8,7 +41,8 @@ import {
   Avatar, 
   Chip, 
   Grid,
-  CircularProgress
+  CircularProgress,
+  LinearProgress
 } from '@mui/material';
 import { 
   ChevronRight as ChevronRightIcon, 
@@ -19,7 +53,9 @@ import { useState, useMemo, useCallback, memo } from 'react';
 import { 
   getWateringDecision, 
   getFadedColor, 
-  calculateFadeFactor 
+  calculateFadeFactor,
+  getWeatherIcon,
+  getWeatherIconEmoji
 } from '../utils/wateringUtils';
 import { getLocalDateString } from '../utils/dateUtils';
 
@@ -99,13 +135,13 @@ export default function WeeklyTable({
     <Card 
       sx={{ 
         mb: 4,
-        bgcolor: '#FEFFFE',
+        bgcolor: '#dfdbc7',
         borderRadius: '0',
-        boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
-        border: '1.5px solid #E8EDE4'
+        boxShadow: 'none',
+        border: 'none'
       }}
     >
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: 2 }}>
         <Box mb={3}>
           {debugMode && (
             <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -144,7 +180,7 @@ export default function WeeklyTable({
               variant="h4" 
               component="h2" 
               sx={{
-                color: '#4A5D3A',
+                color: '#4d5239',
                 fontWeight: 500,
                 fontSize: { xs: '12px', sm: '1rem' },
                 fontFamily: 'var(--font-heading)'
@@ -161,14 +197,14 @@ export default function WeeklyTable({
               mb: 3,
               p: 3,
               borderRadius: '8px',
-              bgcolor: '#F9FBF7',
-              border: '1px solid #E0E8D6',
-              boxShadow: '0 1px 8px rgba(107, 123, 92, 0.06)'
+              bgcolor: '#fffcec',
+              border: '1px solid #f5f1e8',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
             }}
           >
             <Typography variant="body1" sx={{ 
               lineHeight: 1.6, 
-              color: '#4A5D3A',
+              color: '#4d5239',
               fontSize: '0.9rem',
               fontWeight: 500,
               mb: 2
@@ -203,280 +239,340 @@ export default function WeeklyTable({
             const fadeFactor = calculateFadeFactor(index, todayIndex, totalDays, isPast, debugMode);
             const { actionText, actionColor, weatherIcon, decisionBg } = getWateringDecision(day, isPast, debugMode);
             
-            const fadedBg = debugMode || isPast ? '#FEFFFE' : getFadedColor(decisionBg, fadeFactor);
-            const fadedBorderColor = debugMode || isPast ? '#E8EDE4' : getFadedColor(actionColor, Math.max(0.3, fadeFactor));
+            // Get seasonal colors
+            const seasonalColors = getSeasonalColors(CURRENT_SEASON);
+            
+            // Use seasonal colors for current/future cards, #fffcec for past cards
+            let cardBg, cardBorder;
+            if (isPast) {
+              cardBg = '#fffcec';
+              cardBorder = '#f5f1e8';
+            } else if (debugMode) {
+              cardBg = isTodayRow ? '#F3F9FF' : '#FEFFFE';
+              cardBorder = isTodayRow ? '#2196F3' : '#E8EDE4';
+            } else {
+              // Use seasonal decision colors with fading for current/future cards
+              const seasonalDecisionBg = actionText === 'Yes' ? seasonalColors.yes :
+                                       actionText === 'Maybe' ? seasonalColors.maybe : 
+                                       seasonalColors.no;
+              cardBg = getFadedColor(seasonalDecisionBg, fadeFactor);
+              // Make border color match the card background but slightly darker
+              cardBorder = getFadedColor(seasonalDecisionBg, Math.max(0.7, fadeFactor));
+            }
+            
+            // Get seasonal text color that matches the card background
+            let seasonalTextColor = actionColor; // Default fallback
+            if (!isPast && !debugMode) {
+              // Create darker versions of seasonal colors for text
+              if (actionText === 'Yes') {
+                // Blue tones for "Yes" (water plants)
+                seasonalTextColor = CURRENT_SEASON === 'spring' ? '#4A6B9F' :
+                                  CURRENT_SEASON === 'summer' ? '#2E7DB8' :
+                                  CURRENT_SEASON === 'fall' ? '#B5733A' :
+                                  '#4A7BA7'; // winter
+              } else if (actionText === 'Maybe') {
+                // Beige/amber tones for "Maybe" (check soil)
+                seasonalTextColor = CURRENT_SEASON === 'spring' ? '#A67C00' :
+                                  CURRENT_SEASON === 'summer' ? '#B8860B' :
+                                  CURRENT_SEASON === 'fall' ? '#A67C00' :
+                                  '#8B7A66'; // winter beige
+              } else if (actionText === 'No') {
+                // Green tones for "No" (no need to water)
+                seasonalTextColor = CURRENT_SEASON === 'spring' ? '#5A7C47' :
+                                  CURRENT_SEASON === 'summer' ? '#4A7C59' :
+                                  CURRENT_SEASON === 'fall' ? '#6B7A45' :
+                                  '#4A6B52'; // winter green
+              }
+            }
+            
+            // Define today border color (more prominent)
+            let todayBorder;
+            if (isPast) {
+              todayBorder = '#d4c5a9'; // Darker beige for past today
+            } else if (debugMode) {
+              todayBorder = '#2196F3';
+            } else {
+              todayBorder = seasonalTextColor; // Use the seasonal text color for prominence
+            }
             
             return (
               <Card
                 key={`${dayDate}-${debugMode}`}
                 onClick={handleCardClick(dayDate, isPast)}
                 sx={{
-                  mb: 1,
+                  mb: index === data.length - 1 ? 0 : 1,
                   cursor: { xs: 'pointer', md: isPast ? 'pointer' : 'default' },
-                  bgcolor: isTodayRow ? 
-                    (debugMode ? '#F3F9FF' : fadedBg) : 
-                    fadedBg,
+                  bgcolor: cardBg,
                   border: isTodayRow ? 
-                    `2px solid ${debugMode ? '#2196F3' : fadedBorderColor}` : 
-                    `1px solid ${fadedBorderColor}`,
+                    `2px solid ${todayBorder}` : 
+                    `1px solid ${cardBorder}`,
+                  boxShadow: isPast ? '0 2px 8px rgba(0, 0, 0, 0.04)' : 'none',
                   borderRadius: { xs: '12px', md: '8px' },
                   opacity: isPast ? { xs: 0.7, md: 0.6 } : 1,
                   transform: 'scale(1)',
                   '&:hover': isPast ? {} : {
-                    bgcolor: debugMode ? '#F9FBF7' : getFadedColor(decisionBg, Math.min(1, fadeFactor + 0.1)),
+                    bgcolor: debugMode ? '#F9FBF7' : cardBg,
                     transform: { xs: 'scale(1.01)', md: 'scale(1.001)' },
                   },
                   transition: 'all 0.2s ease-in-out'
                 }}
               >
-                <CardContent sx={{ p: { xs: isPast ? 1.5 : 2, md: 3 } }}>
-                  {/* Main Content Row */}
-                  <Box 
-                    display="flex" 
-                    alignItems="center" 
-                    justifyContent="space-between"
-                    mb={{ xs: 0, md: isPast ? 0 : 1 }}
-                  >
-                    {/* Date Section */}
-                    <Box 
-                      display="flex" 
-                      alignItems="center" 
-                      gap={{ xs: isPast ? 1.5 : 2, md: isPast ? 2 : 0 }}
-                      minWidth={{ xs: 'auto', md: isPast ? 'auto' : 120 }}
-                      flexDirection={{ xs: 'row', md: isPast ? 'row' : 'column' }}
-                    >
-                      <Box 
-                        textAlign={{ xs: 'center', md: isPast ? 'center' : 'left' }} 
-                        minWidth={{ xs: isPast ? 35 : 40, md: isPast ? 35 : 'auto' }}
-                        sx={{ 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: { xs: 'center', md: isPast ? 'center' : 'flex-start' } 
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ 
-                          fontSize: { xs: isPast ? '0.75rem' : '0.9rem', md: isPast ? '0.75rem' : '1rem' },
-                          fontWeight: { xs: isPast ? 500 : 600, md: isPast ? 500 : 600 },
-                          color: '#4A5D3A',
-                          mb: { xs: 0, md: isPast ? 0 : 0.5 }
-                        }}>
-                          <Box component="span" sx={{ display: { xs: 'inline', md: isPast ? 'inline' : 'none' } }}>
-                            {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
-                          </Box>
-                          <Box component="span" sx={{ display: { xs: 'none', md: isPast ? 'none' : 'inline' } }}>
-                            {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' })}
-                          </Box>
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ 
-                          fontSize: { xs: isPast ? '0.6rem' : '0.7rem', md: isPast ? '0.6rem' : '0.85rem' }
-                        }}>
-                          <Box component="span" sx={{ display: { xs: 'inline', md: isPast ? 'inline' : 'none' } }}>
-                            {new Date(dayDate + 'T12:00:00').getDate()}
-                          </Box>
-                          <Box component="span" sx={{ display: { xs: 'none', md: isPast ? 'none' : 'inline' } }}>
-                            {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </Box>
-                        </Typography>
-                        {isTodayRow && (
-                          <Chip 
-                            label="TODAY" 
-                            size="small" 
-                            sx={{ 
-                              mt: 0.5,
-                              bgcolor: '#2196F3',
-                              color: 'white',
-                              fontSize: '0.65rem',
-                              height: { xs: 16, md: 20 },
-                              display: 'inline-flex'
-                            }} 
-                          />
-                        )}
-                      </Box>
-                      
-                      {/* Mobile + Past Desktop: Weather Info */}
-                      <Box sx={{ 
-                        display: { xs: 'flex', md: isPast ? 'flex' : 'none' },
-                        alignItems: 'center',
-                        gap: 1
-                      }}>
+                <CardContent sx={{ 
+                  p: 0,
+                  '&:last-child': {
+                    paddingBottom: 0
+                  }
+                }}>
+                  {/* Card Content - matching HTML structure */}
+                  <Box sx={{ p: isPast ? 1 : 2 }}>
+                    {/* Top section: Icon, Date/Temp, Action Button */}
+                    <Box sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: isPast ? 'center' : 'flex-start',
+                      mb: isPast ? 0 : 1
+                    }}>
+                      {/* Left: Weather Icon + Date/Temp */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: isPast ? 2 : 3 }}>
                         {/* Weather Icon */}
-                        <Box sx={{ fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: isPast ? '1.2rem' : 0 } }}>
-                          {debugMode ? (
-                            day.description.includes('rain') ? '🌧️' :
-                            day.description.includes('cloud') ? '☁️' :
-                            day.description.includes('clear') || day.description.includes('sun') ? '☀️' :
-                            day.description.includes('snow') ? '❄️' : '☀️'
-                          ) : (
-                            weather?.icon || weatherIcon
-                          )}
+                        <Box sx={{ 
+                          width: isPast ? '48px' : '64px',
+                          height: isPast ? '48px' : '64px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {(() => {
+                            let iconSrc;
+                            if (debugMode) {
+                              iconSrc = getWeatherIcon(day.description || 'clear', day.temp_max || 70);
+                            } else if (weather?.icon) {
+                              // Check if it's already a custom icon path or emoji
+                              if (typeof weather.icon === 'string' && weather.icon.startsWith('/weather-icons/')) {
+                                iconSrc = weather.icon;
+                              } else if (typeof weather.icon === 'string' && weather.icon.includes('png')) {
+                                iconSrc = weather.icon;
+                              } else {
+                                // Map from weather description to custom icon
+                                iconSrc = getWeatherIcon(weather.description || 'clear', day.temp_max || weather.temp || 70);
+                              }
+                            } else {
+                              iconSrc = getWeatherIcon('clear', day.temp_max || 70);
+                            }
+
+                            return (
+                              <img 
+                                src={iconSrc}
+                                alt="Weather icon"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'contain'
+                                }}
+                                onError={(e) => {
+                                  // Fallback to emoji if image fails to load
+                                  const fallbackEmoji = debugMode ? 
+                                    getWeatherIconEmoji(day.description || 'clear', day.temp_max || 70) :
+                                    getWeatherIconEmoji(weather?.description || 'clear', day.temp_max || 70);
+                                  e.target.style.display = 'none';
+                                  e.target.parentNode.innerHTML = `<span style="font-size: ${isPast ? '2rem' : '3rem'}">${fallbackEmoji}</span>`;
+                                }}
+                              />
+                            );
+                          })()}
                         </Box>
                         
-                        {/* High Temperature */}
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: { xs: isPast ? '0.7rem' : '0.8rem', md: isPast ? '0.7rem' : 0 },
-                            fontWeight: 500,
-                            color: '#6B7B5C'
-                          }}
-                        >
-                          {(() => {
-                            if (debugMode && day.temp_max) {
-                              return `${Math.round(day.temp_max)}°`;
-                            } else if (weather?.temp) {
-                              // Parse "83°/58°F" format to get high temp
-                              const tempParts = weather.temp.split('/');
-                              if (tempParts.length === 2) {
-                                const high = parseFloat(tempParts[0]);
-                                if (!isNaN(high)) {
-                                  return `${Math.round(high)}°`;
-                                }
+                        {/* Date and Temperature */}
+                        <Box>
+                          {/* Date Line */}
+                          <Typography sx={{
+                            fontWeight: 700,
+                            fontSize: isPast ? '1rem' : { xs: '1.1rem', md: '1.25rem' },
+                            color: isPast ? '#374151' : 
+                                   (actionText === 'Yes' ? '#1e3a8a' :
+                                    actionText === 'Maybe' ? '#854d0e' :
+                                    actionText === 'No' ? '#14532d' : '#374151'),
+                            lineHeight: 1.2,
+                            mb: isPast ? 0 : 0.5
+                          }}>
+                            {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}
+                            {isPast && (
+                              <Box component="span" sx={{ 
+                                ml: 1, 
+                                fontWeight: 400, 
+                                color: '#6b7280' 
+                              }}>
+                                {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric'
+                                }).toUpperCase()}
+                              </Box>
+                            )}
+                          </Typography>
+                          
+                          {/* Temperature Line */}
+                          <Typography sx={{
+                            fontSize: isPast ? '0.7rem' : { xs: '0.875rem', md: '1.125rem' },
+                            color: isPast ? '#4b5563' :
+                                   (actionText === 'Yes' ? '#1e40af' :
+                                    actionText === 'Maybe' ? '#92400e' :
+                                    actionText === 'No' ? '#166534' : '#4b5563'),
+                            lineHeight: 1
+                          }}>
+                            {(() => {
+                              const temp = debugMode && day.temp_max ? 
+                                `${Math.round(day.temp_max)}°/${Math.round(day.temp_min)}°F` :
+                                weather?.temp || '--°';
+                              
+                              if (isPast) {
+                                const desc = debugMode && day.description ? 
+                                  day.description :
+                                  weather?.description || 'Clear';
+                                const rainAmount = (() => {
+                                  let amount = 0;
+                                  if (debugMode && day.rain !== undefined) {
+                                    amount = day.rain;
+                                  } else if (weather?.rain !== undefined) {
+                                    amount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
+                                  } else if (day.rain !== undefined) {
+                                    amount = day.rain;
+                                  }
+                                  return amount.toFixed(2);
+                                })();
+                                return `${temp} - ${desc.charAt(0).toUpperCase() + desc.slice(1)} - ${rainAmount}"`;
                               }
+                              return temp;
+                            })()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      
+                      {/* Right: Action Button + Expand Icon */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {!isPast && !debugMode && (
+                          <Box sx={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            px: '0.75rem',
+                            py: '0.25rem',
+                            borderRadius: '9999px',
+                            textTransform: 'uppercase',
+                            ...(actionText === 'Yes' && {
+                              backgroundColor: '#a8c7fa',
+                              color: '#1c3d5a'
+                            }),
+                            ...(actionText === 'Maybe' && {
+                              backgroundColor: '#e9d184',
+                              color: '#5d4a1a'
+                            }),
+                            ...(actionText === 'No' && {
+                              backgroundColor: '#b8c4a9',
+                              color: '#3a4a2a'
+                            })
+                          }}>
+                            {actionText}
+                          </Box>
+                        )}
+                        <Box sx={{ 
+                          color: isPast ? '#9ca3af' :
+                                 (actionText === 'Yes' ? '#1e40af' :
+                                  actionText === 'Maybe' ? '#92400e' :
+                                  actionText === 'No' ? '#166534' : '#9ca3af'),
+                          fontSize: '1.5rem'
+                        }}>
+                          {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Weather description and rain gauge */}
+                    <Box sx={{
+                      display: 'flex',
+                      justifyContent: isPast ? 'flex-end' : 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.875rem',
+                      mt: isPast ? 0.5 : 1
+                    }}>
+                      {/* Weather Description - only show for non-past cards in compressed view */}
+                      {!isPast && (
+                        <Typography sx={{
+                          fontWeight: 500,
+                          color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.7)' :
+                                 actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.7)' :
+                                 actionText === 'No' ? 'rgba(20, 83, 45, 0.7)' : 'rgba(75, 85, 99, 0.7)',
+                          textTransform: 'capitalize',
+                          fontSize: '0.875rem'
+                        }}>
+                          {debugMode && day.description ? 
+                            day.description :
+                            weather?.description || 'Clear'
+                          }
+                        </Typography>
+                      )}
+                      
+                      {/* Rain gauge */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {/* Water drop icon for all cards */}
+                        <Box sx={{ 
+                          fontSize: isPast ? '0.75rem' : '0.875rem',
+                          color: isPast ? '#9ca3af' : 'rgba(59, 130, 246, 0.8)',
+                          lineHeight: 1
+                        }}>
+                          💧
+                        </Box>
+                        
+                        {/* Progress bar container */}
+                        <Box sx={{
+                          width: isPast ? '60px' : '80px', // Adjusted for icon on all cards
+                          height: isPast ? '6px' : '8px',
+                          borderRadius: '9999px',
+                          overflow: 'hidden',
+                          backgroundColor: isPast ? 'rgba(156, 163, 175, 0.3)' : 'rgba(59, 130, 246, 0.3)' // Blue for all non-past, grey for past
+                        }}>
+                          <Box sx={{
+                            height: '100%',
+                            backgroundColor: isPast ? '#9ca3af' : '#3b82f6', // Blue for all non-past, grey for past
+                            width: (() => {
+                              let rainAmount = 0;
+                              if (debugMode && day.rain !== undefined) {
+                                rainAmount = day.rain;
+                              } else if (weather?.rain !== undefined) {
+                                rainAmount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
+                              } else if (day.rain !== undefined) {
+                                rainAmount = day.rain;
+                              }
+                              return `${Math.min(100, (rainAmount / 1) * 100)}%`;
+                            })()
+                          }} />
+                        </Box>
+                        
+                        {/* Rain amount */}
+                        <Typography sx={{
+                          fontWeight: 600,
+                          fontSize: isPast ? '0.75rem' : '0.875rem',
+                          color: isPast ? '#9ca3af' : 'rgba(59, 130, 246, 0.8)' // Blue for all non-past, grey for past
+                        }}>
+                          {(() => {
+                            let rainAmount = 0;
+                            if (debugMode && day.rain !== undefined) {
+                              rainAmount = day.rain;
+                            } else if (weather?.rain !== undefined) {
+                              rainAmount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
+                            } else if (day.rain !== undefined) {
+                              rainAmount = day.rain;
                             }
-                            // Fallback to raw data if available
-                            if (day.temp_max) {
-                              return `${Math.round(day.temp_max)}°`;
-                            }
-                            return '--°';
+                            return `${rainAmount.toFixed(2)}"`;
                           })()}
                         </Typography>
-                      </Box>
-                      
-                      {/* Mobile + Past Desktop: Action Text or Weather Info */}
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: isPast ? '#6B7B5C' : actionColor,
-                          fontWeight: { xs: isPast ? 500 : 500, md: isPast ? 500 : 0 },
-                          fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : 0 },
-                          display: { xs: 'block', md: isPast ? 'block' : 'none' }
-                        }}
-                      >
-                        {isPast ? (
-                          debugMode && day.description ? 
-                            day.description.charAt(0).toUpperCase() + day.description.slice(1) :
-                            weather?.description ? 
-                              weather.description.charAt(0).toUpperCase() + weather.description.slice(1) :
-                              'Past weather'
-                        ) : (
-                          actionText
-                        )}
-                      </Typography>
-                    </Box>
-                    
-                    {/* Desktop: Weather Section */}
-                    <Box flex={1} mx={3} sx={{ display: { xs: 'none', md: isPast ? 'none' : 'block' } }}>
-                      {debugMode ? (
-                        <Box display="flex" alignItems="center" gap={2}>
-                          <Box sx={{ fontSize: '1.5rem' }}>
-                            {weatherIcon}
-                          </Box>
-                          <Box>
-                            <Typography variant="body1" fontWeight={600}>
-                              {Math.round(day.temp_max)}°/{Math.round(day.temp_min)}°
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-                              {day.description}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      ) : (
-                        weather && (
-                          <Box display="flex" alignItems="center" gap={2}>
-                            <Box sx={{ fontSize: '1.5rem' }}>
-                              {weather.icon}
-                            </Box>
-                            <Box>
-                              <Typography variant="body1" fontWeight={600}>
-                                {weather.temp}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-                                {weather.description}
-                              </Typography>
-                              {weather.rain && (
-                                <Typography variant="caption" color="info.main" display="block">
-                                  Rain: {weather.rain}&quot;
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                        )
-                      )}
-                    </Box>
-                    
-                    {/* Desktop: Decision Section & Mobile + Past Desktop: Expand Icon */}
-                    <Box sx={{ 
-                      minWidth: { xs: 'auto', md: isPast ? 'auto' : 200 }, 
-                      textAlign: { xs: 'center', md: 'right' },
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: { xs: 'center', md: 'flex-end' },
-                      justifyContent: 'center'
-                    }}>
-                      {/* Desktop Decision Badge */}
-                      <Box 
-                        display={{ xs: 'none', md: !debugMode && !isPast ? 'inline-flex' : 'none' }}
-                        alignItems="center" 
-                        gap={1}
-                        sx={{
-                          px: 2,
-                          py: 0.5,
-                          borderRadius: '16px',
-                          bgcolor: fadedBg,
-                          border: `1px solid ${actionColor}20`
-                        }}
-                      >
-                        <Box sx={{ fontSize: '0.8rem', color: actionColor }}>
-                          {weatherIcon}
-                        </Box>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: actionColor,
-                            fontWeight: 600,
-                            fontSize: '0.85rem'
-                          }}
-                        >
-                          {actionText}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Desktop Reasoning Text */}
-                      {!debugMode && day.reason && (
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: '#7A8471',
-                            fontSize: '0.8rem',
-                            lineHeight: 1.3,
-                            mt: 0.5,
-                            fontStyle: 'italic',
-                            textAlign: 'right',
-                            display: { xs: 'none', md: 'block' }
-                          }}
-                        >
-                          {day.reason}
-                        </Typography>
-                      )}
-                      
-                      {/* Mobile + Past Desktop: Expand Icon */}
-                      <Box sx={{ 
-                        color: '#9E9E9E', 
-                        fontSize: { xs: isPast ? '1.2rem' : '1.5rem', md: isPast ? '1.2rem' : 0 },
-                        display: { xs: 'block', md: isPast ? 'block' : 'none' }
-                      }}>
-                        {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                       </Box>
                     </Box>
                   </Box>
                   
+
+                  
                   {/* Mobile + Past Desktop: Expanded View */}
                   {isExpanded && (
-                    <Box mt={2} pt={2} borderTop="1px solid #F0F3EC" sx={{ display: { xs: 'block', md: isPast ? 'block' : 'none' } }}>
+                    <Box mt={0} pt={2} borderTop="1px solid #F0F3EC" sx={{ display: { xs: 'block', md: isPast ? 'block' : 'none' } }}>
                       {debugMode ? (
                         // Debug mode expanded content
                         <Grid container spacing={2}>
@@ -507,33 +603,54 @@ export default function WeeklyTable({
                         </Grid>
                       ) : (
                         // AI mode expanded content
-                        <Box>
-                          {weather && (
-                            <Box mb={2}>
-                              <Typography variant="caption" color="text.secondary">Weather</Typography>
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
-                                  {weather.icon}
-                                </Typography>
-                                <Typography variant="body2" fontWeight={600}>
-                                  {weather.temp}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-                                  {weather.description}
-                                </Typography>
-                              </Box>
-                              {weather.rain && (
-                                <Typography variant="caption" color="info.main">
-                                  {weather.rain}&quot; rain expected
-                                </Typography>
-                              )}
+                        <Box sx={{
+                          mt: 2,
+                          pt: 2,
+                          px: isPast ? 2 : 3,
+                          pb: isPast ? 2 : 3,
+                          borderTop: `1px solid ${actionText === 'Yes' ? 'rgba(30, 58, 138, 0.2)' :
+                                                  actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.2)' :
+                                                  actionText === 'No' ? 'rgba(20, 83, 45, 0.2)' : 'rgba(75, 85, 99, 0.2)'}`
+                        }}>
+                          {/* Weather description for past cards in expanded view */}
+                          {isPast && (
+                            <Box sx={{ mb: day.reason ? 2 : 0 }}>
+                              <Typography sx={{
+                                fontSize: '0.8rem',
+                                fontWeight: 500,
+                                color: '#6b7280',
+                                textTransform: 'capitalize',
+                                mb: 0.5
+                              }}>
+                                Weather: {debugMode && day.description ? 
+                                  day.description :
+                                  weather?.description || 'Clear'
+                                }
+                              </Typography>
                             </Box>
                           )}
                           
                           {day.reason && (
                             <Box>
-                              <Typography variant="caption" color="text.secondary">Gnome&apos;s Reasoning</Typography>
-                              <Typography variant="body2" sx={{ fontSize: '0.85rem', lineHeight: 1.4, color: '#7A8471' }}>
+                              <Typography sx={{
+                                fontStyle: 'italic',
+                                fontWeight: 600,
+                                color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.8)' :
+                                       actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.8)' :
+                                       actionText === 'No' ? 'rgba(20, 83, 45, 0.8)' : 'rgba(75, 85, 99, 0.8)',
+                                fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : '1rem' },
+                                mb: 1,
+                                fontFamily: 'var(--font-heading)'
+                              }}>
+                                Gnome's Reasoning
+                              </Typography>
+                              <Typography sx={{
+                                fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : '0.95rem' },
+                                lineHeight: 1.4,
+                                color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.7)' :
+                                       actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.7)' :
+                                       actionText === 'No' ? 'rgba(20, 83, 45, 0.7)' : 'rgba(75, 85, 99, 0.7)'
+                              }}>
                                 {day.reason}
                               </Typography>
                             </Box>
