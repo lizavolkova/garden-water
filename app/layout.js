@@ -33,6 +33,12 @@ export const metadata = {
   icons: {
     icon: '/favicon.svg',
   },
+  themeColor: '#dfdbc7',
+  other: {
+    'theme-color': '#dfdbc7',
+    'msapplication-navbutton-color': '#dfdbc7',
+    'apple-mobile-web-app-status-bar-style': 'default',
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -41,6 +47,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${cinzelDecorative.variable} antialiased`}
         id="__next"
+        style={{ backgroundColor: '#dfdbc7' }}
       >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>

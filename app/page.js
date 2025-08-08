@@ -1,6 +1,39 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+
+// SEASONAL THEME CONFIGURATION
+// Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasons
+const CURRENT_SEASON = 'summer';
+
+// Seasonal background configuration
+const getSeasonalBackgrounds = (season) => {
+  const backgrounds = {
+    spring: {
+      mobile: 'url(/mobile-background-spring.png)',
+      desktop: 'url(/floral-background-spring.png)'
+    },
+    summer: {
+      mobile: 'url(/mobile-background-summer.png)',
+      desktop: 'url(/floral-background-summer.png)'
+    },
+    fall: {
+      mobile: 'url(/mobile-background-fall.png)',
+      desktop: 'url(/floral-background-fall.png)'
+    },
+    winter: {
+      mobile: 'url(/mobile-background-winter.png)',
+      desktop: 'url(/floral-background-winter.png)'
+    }
+  };
+  
+  // Fallback to default if season not found or files don't exist yet
+  return backgrounds[season] || {
+    mobile: 'url(/mobile-background-new.png)',
+    desktop: 'url(/floral-background.png)'
+  };
+};
+
 import Image from 'next/image';
 import {
   Container,
@@ -195,10 +228,17 @@ export default function Home() {
     }
   }, [zipCode, initialLoad, isClient, debugMode]);
 
+  // Get seasonal backgrounds
+  const seasonalBgs = getSeasonalBackgrounds(CURRENT_SEASON);
+
   return (
     <>
       <title>Water Gnome - Your Garden Watering Expert</title>
       <meta name="description" content="Meet Water Gnome, your friendly garden companion who provides expert watering advice based on weather patterns" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+      <meta name="theme-color" content="#dfdbc7" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      <meta name="msapplication-navbutton-color" content="#dfdbc7" />
       
       {/* Desktop Nav Header - Only show when data exists */}
       {(weatherData || wateringAdvice) && (
@@ -228,21 +268,28 @@ export default function Home() {
       <Box
         sx={{
           position: 'relative',
-          minHeight: '100vh',
+          minHeight: { xs: '100dvh', lg: '100vh' }, // Use min-height instead of height
+          height: { xs: '100%', lg: '100vh' },
+          backgroundColor: '#dfdbc7', // App background color
           backgroundImage: {
-            xs: 'url(/mobile-background-new.png)', // Mobile background
-            lg: 'url(/floral-background.png)'  // Desktop background  
+            xs: seasonalBgs.mobile, // Seasonal mobile background
+            lg: seasonalBgs.desktop  // Seasonal desktop background  
           },
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
+          backgroundAttachment: { xs: 'local', lg: 'fixed' }, // local on mobile to avoid Safari issues
           backgroundPositionY: {
             xs: '-118px', // Mobile background vertical position
             lg: 'center'  // Desktop background stays centered
           },
+          // Handle safe areas and extend background
+          paddingTop: { xs: 'env(safe-area-inset-top)', lg: 0 },
+          paddingBottom: { xs: 'env(safe-area-inset-bottom)', lg: 0 },
+          paddingLeft: { xs: 'env(safe-area-inset-left)', lg: 0 },
+          paddingRight: { xs: 'env(safe-area-inset-right)', lg: 0 },
           py: 4,
           pt: { 
-            xs: 4, // Mobile padding
+            xs: 1, // Mobile padding
             lg: (weatherData || wateringAdvice) ? 8 : 4 // Desktop padding - more when nav present
           },
         }}
@@ -356,7 +403,7 @@ export default function Home() {
 
         {/* Mobile Layout */}
         <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
-          <Container maxWidth="md" sx={{ py: 2 }}>
+          <Container maxWidth="md" sx={{ pt:2, px: 0 }}>
           {/* Conditional Content based on data availability */}
           {loading ? (
             // Loading State - Show spinner

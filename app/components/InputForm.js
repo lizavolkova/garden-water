@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, Box, TextField, Button, CircularProgress } from '@mui/material';
+import { Card, CardContent, Box, TextField, Button, CircularProgress, Typography } from '@mui/material';
 import { LocationOn, WaterDrop } from '@mui/icons-material';
 
 export default function InputForm({ 
@@ -13,11 +13,9 @@ export default function InputForm({
   return (
     <Card 
       sx={{ 
-        mb: 4,
-        bgcolor: '#4A5D3A',
-        borderRadius: '8px',
-        boxShadow: '0 2px 12px rgba(107, 123, 92, 0.08)',
-        border: '1px solid #5A6B4D'
+        bgcolor: '#dfdbc7',
+        borderRadius: '0',
+        boxShadow: 'none'
       }}
     >
       <CardContent sx={{ p: 3 }}>
@@ -30,6 +28,22 @@ export default function InputForm({
             minHeight: { xs: 140, sm: 56 } // Consistent height for mobile (account for column layout + gaps)
           }}
         >
+            <Typography 
+        variant="h4" 
+        component="h2" 
+        sx={{
+          color: '#4d5239',
+          fontWeight: 500,
+          fontSize: { xs: '16px', sm: '12px' },
+          mb: 0,
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 20,
+          width: '100%'
+        }}
+      >
+        Where do your green friends live?
+      </Typography>
           {loading ? (
             // Loading state - replace input/button with spinner
             <Box 
@@ -45,9 +59,9 @@ export default function InputForm({
             >
               <CircularProgress 
                 size={48} 
-                sx={{ color: 'white' }}
+                sx={{ color: '#5A6B4D' }}
               />
-              <Box sx={{ color: 'white', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
+              <Box sx={{ color: '#5A6B4D', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
                 Consulting with Wynn's gnome wisdom...
               </Box>
             </Box>
@@ -56,28 +70,24 @@ export default function InputForm({
             <>
               <TextField
                 fullWidth
-                label="Where do your green friends live?"
+                // label="Where do your green friends live?"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                placeholder="Where is your garden?"
-                InputProps={{
-                  startAdornment: <LocationOn sx={{ mr: 1, color: '#6B7B5C' }} />,
-                }}
-                variant="outlined"
+                placeholder="Enter your zip code"
+                variant="standard"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '6px',
-                    bgcolor: '#FEFFFE',
+                  '& .MuiInput-root': {
                     color: '#333333',
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    fontSize: '16px',
+                    backgroundColor: 'transparent',
+                    '&:before': {
+                      borderBottom: '1px solid #5A6B4D',
                     },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.8)',
+                    '&:hover:before': {
+                      borderBottom: '2px solid #5A6B4D',
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: 'white',
-                      borderWidth: '1px',
+                    '&:after': {
+                      borderBottom: '2px solid #5A6B4D',
                     },
                     '& input': {
                       color: '#333333',
@@ -88,10 +98,10 @@ export default function InputForm({
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    color: '#7A8471',
+                    color: '#5A6B4D',
                     fontWeight: 400,
                     '&.Mui-focused': {
-                      color: '#6B7B5C',
+                      color: '#5A6B4D',
                     },
                   },
                 }}
@@ -101,34 +111,30 @@ export default function InputForm({
                 size="large"
                 onClick={() => fetchWeatherAndAdvice(true)}
                 disabled={!zipCode}
-                startIcon={<WaterDrop sx={{ fontSize: '1.1rem' }} />}
                 sx={{ 
-                  minWidth: 180,
-                  height: 56,
-                  px: 2.5,
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  width: '100%',
+                  px: 2,
+                  backgroundColor: '#4A5D3A',
                   backgroundImage: 'none',
                   color: 'white',
                   fontWeight: 500,
                   fontSize: '0.95rem',
-                  borderRadius: '6px',
+                  borderRadius: '25px',
                   textTransform: 'none',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                   '&.MuiButton-contained': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    backgroundColor: '#4A5D3A', 
                     backgroundImage: 'none',
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor: '#3F4F2F',
                     backgroundImage: 'none',
                     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
                   },
                   '&:disabled': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     backgroundImage: 'none',
                     boxShadow: 'none',
-                    color: 'rgba(255, 255, 255, 0.5)'
+                    color: 'rgba(255, 255, 255, 0.7)'
                   }
                 }}
               >

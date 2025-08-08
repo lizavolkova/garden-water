@@ -4,13 +4,13 @@ import { Box, Typography } from '@mui/material';
 
 export default function IntroText() {
   return (
-    <Box sx={{ textAlign: 'center', mb: { xs: 3, lg: 4 } }}>
+    <Box sx={{ textAlign: 'center', mb: { xs: '-50px', lg: 4 }, px: 3 }}>
       <Typography 
         variant="h1" 
         component="h1" 
         sx={{
           fontWeight: 400,
-          fontSize: { xs: '2rem', sm: '3rem', md: '3.2rem' },
+          fontSize: { xs: '.9rem', sm: '3rem', md: '3.2rem' },
           lineHeight: 1.1,
           letterSpacing: '0.01em',
           mb: 2,
@@ -20,7 +20,25 @@ export default function IntroText() {
           mx: 'auto'
         }}
       >
-        Water Gnome AI
+        water gnome ai
+      </Typography>
+
+      <Typography 
+        variant="h1" 
+        component="h1" 
+        sx={{
+          fontWeight: 400,
+          fontSize: { xs: '2.2rem', sm: '3rem', md: '3.2rem' },
+          lineHeight: 1.1,
+          letterSpacing: '0.01em',
+          mb: 2,
+          fontFamily: 'var(--font-heading)',
+          color: '#3f2a14',
+          maxWidth: 'sm',
+          mx: 'auto'
+        }}
+      >
+        Wynn the Water Gnome
       </Typography>
       
       <Typography 
@@ -28,7 +46,7 @@ export default function IntroText() {
         sx={{
           fontWeight: 200,
           lineHeight: 1.6,
-          fontSize: { xs: '1rem', sm: '1.1rem', lg: '1rem' },
+          fontSize: { xs: '.8rem', sm: '1.1rem', lg: '1rem' },
           fontFamily: 'var(--font-body)',
           color: '#3f2a14',
           fontStyle: { xs: 'normal', lg: 'italic' },

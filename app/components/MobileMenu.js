@@ -39,6 +39,13 @@ export default function MobileMenu({
     handleClose(); // Close menu after submitting
   };
 
+  const handleClearLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      window.location.reload(); // Refresh the page to reset the app state
+    }
+  };
+
   return (
     <>
       {/* Hamburger Menu Button - Fixed position */}
@@ -217,6 +224,42 @@ export default function MobileMenu({
                 Celsius (°C)
               </ToggleButton>
             </ToggleButtonGroup>
+          </Box>
+
+          <Divider sx={{ my: 3, borderColor: '#E8EDE4' }} />
+
+          {/* Developer/Testing Section */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ 
+              color: '#6B7B5C', 
+              fontWeight: 500, 
+              mb: 2,
+              fontSize: '1rem'
+            }}>
+              🧪 Testing
+            </Typography>
+            
+            <Button
+              variant="outlined"
+              onClick={handleClearLocalStorage}
+              fullWidth
+              sx={{
+                color: '#6B7B5C',
+                borderColor: '#E8EDE4',
+                backgroundColor: '#FFFFFF',
+                fontWeight: 500,
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontSize: '0.9rem',
+                py: 1,
+                '&:hover': {
+                  borderColor: '#6B7B5C',
+                  backgroundColor: '#F9FBF7',
+                },
+              }}
+            >
+              Clear Local Storage
+            </Button>
           </Box>
         </Box>
       </Drawer>

@@ -835,7 +835,7 @@ export default function Home() {
                     sx={{
                       color: '#4A5D3A',
                       fontWeight: 500,
-                      fontSize: { xs: '1.4rem', sm: '1.6rem' },
+                      fontSize: { xs: '12px', sm: '1.6rem' },
                       fontFamily: 'serif'
                     }}
                   >

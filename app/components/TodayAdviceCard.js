@@ -6,7 +6,11 @@ import Image from 'next/image';
 import { display } from '@mui/system';
 
 // FOR TESTING: Change this value to 'yes', 'maybe', or 'no' to test different states
-const TEST_OVERRIDE = 'yes'; // Set to 'yes', 'maybe', 'no', or null to disable
+const TEST_OVERRIDE = 'no'; // Set to 'yes', 'maybe', 'no', or null to disable
+
+// SEASONAL THEME CONFIGURATION
+// Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasonal colors
+const CURRENT_SEASON = 'summer';
 
 export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
   const [selectedCopy, setSelectedCopy] = useState(null);
@@ -41,14 +45,39 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
   
   if (!todayAdvice || !selectedCopy) return null;
 
-  // Determine background color based on advice
+  // Seasonal color configuration
+  const getSeasonalColors = (season) => {
+    const seasonalPalettes = {
+      summer: {
+        yes: '#e8eeff',    // A soft, light blue
+        maybe: '#efe2ab',  // A warm, sandy yellow
+        no: '#cad597'      // A gentle, leafy green
+      },
+      fall: {
+        yes: '#d4e4f3',    // A cool, crisp sky blue
+        maybe: '#f3d9a2',  // A golden, honey-like yellow
+        no: '#c1cd97'      // A muted, olive green
+      },
+      winter: {
+        yes: '#d8e8f0',    // An icy, frosted blue
+        maybe: '#f0e6c2',  // A pale, winter sun yellow
+        no: '#b8c4a9'      // A dusty, evergreen-like green
+      },
+      spring: {
+        yes: '#e0f0ff',    // A bright, clear sky blue
+        maybe: '#f5f5a1',  // A soft, daffodil yellow
+        no: '#cde2c3'      // A fresh, new-growth green
+      }
+    };
+    
+    // Fallback to summer if season not found
+    return seasonalPalettes[season] || seasonalPalettes.summer;
+  };
+
+  // Determine background color based on advice and season
   const getBackgroundColor = (shouldWater) => {
-    switch(shouldWater) {
-      case 'yes': return '#e8eeff';
-      case 'maybe': return '#efe2ab';
-      case 'no': return '#cad597';
-      default: return '#fcfdfc';
-    }
+    const seasonalColors = getSeasonalColors(CURRENT_SEASON);
+    return seasonalColors[shouldWater] || '#fcfdfc';
   };
 
   // Use test override if set, otherwise use actual advice
@@ -59,7 +88,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
       sx={{ 
         mb: 0,
         bgcolor: getBackgroundColor(currentWaterState),
-        borderRadius: '12px',
+        borderRadius: '0',
         boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
         p: 0,
         position: 'relative',
@@ -86,7 +115,8 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
       </Typography>
       
       <Box sx={{
-        display: 'flex'
+        display: 'flex',
+        alignItems: 'center'
       }}>
     {/* Background Image - positioned as backdrop on right */}
     <Box 

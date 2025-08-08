@@ -100,12 +100,12 @@ export default function WeeklyTable({
       sx={{ 
         mb: 4,
         bgcolor: '#FEFFFE',
-        borderRadius: '12px',
+        borderRadius: '0',
         boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
         border: '1.5px solid #E8EDE4'
       }}
     >
-      <CardContent sx={{ p: 4 }}>
+      <CardContent sx={{ p: 3 }}>
         <Box mb={3}>
           {debugMode && (
             <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -146,7 +146,7 @@ export default function WeeklyTable({
               sx={{
                 color: '#4A5D3A',
                 fontWeight: 500,
-                fontSize: { xs: '1rem', sm: '1rem' },
+                fontSize: { xs: '12px', sm: '1rem' },
                 fontFamily: 'var(--font-heading)'
               }}
             >
@@ -169,7 +169,7 @@ export default function WeeklyTable({
             <Typography variant="body1" sx={{ 
               lineHeight: 1.6, 
               color: '#4A5D3A',
-              fontSize: '1rem',
+              fontSize: '0.9rem',
               fontWeight: 500,
               mb: 2
             }}>
@@ -178,7 +178,7 @@ export default function WeeklyTable({
             
             <Typography variant="caption" sx={{ 
               color: '#7A8471',
-              fontSize: '0.75rem',
+              fontSize: '0.8rem',
               fontStyle: 'italic',
               lineHeight: 1.4,
               display: 'block',

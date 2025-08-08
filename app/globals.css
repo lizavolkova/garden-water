@@ -24,12 +24,53 @@
   }
 }
 
+html,
+body {
+  background-color: #dfdbc7 !important; /* Ensure global background matches app */
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none; /* Prevent bounce scrolling on iOS */
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    background-color: #dfdbc7 !important;
+  }
+  
+  /* Extend background above viewport for status bar */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background-color: #dfdbc7;
+    z-index: -10;
+  }
+  
+  /* Extend background below viewport for Safari UI */
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background-color: #dfdbc7;
+    z-index: -10;
+  }
 }
 
 /* Modern button styles */
