@@ -95,11 +95,7 @@ export default function MobileMenu({
             alignItems: 'center', 
             mb: 3 
           }}>
-            <Typography variant="h6" sx={{ 
-              color: '#4A5D3A', 
-              fontWeight: 500,
-              fontFamily: 'var(--font-heading)'
-            }}>
+            <Typography variant="h6">
               Settings
             </Typography>
             <IconButton onClick={handleClose} size="small">

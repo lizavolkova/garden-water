@@ -49,53 +49,70 @@ const theme = createTheme({
     fontFamily: 'var(--font-body)', // Default to body font
     h1: {
       fontFamily: 'var(--font-heading)',
-      fontSize: '3rem',
-      fontWeight: 400,
-      letterSpacing: '0.05em',
-      color: '#14532d', // garden-900
+      fontSize: { xs: '34px', md: '44px' },
+      fontWeight: 700,
+      letterSpacing: 0,
+      lineHeight: 1.1,
+      color: '#3f2a1e',
     },
     h2: {
       fontFamily: 'var(--font-heading)',
-      fontSize: '2rem',
-      fontWeight: 400,
-      letterSpacing: '0.025em',
-      color: '#166534', // garden-800
+      fontSize: { xs: '24px', md: '32px' },
+      fontWeight: 600,
+      letterSpacing: '0.02em',
+      lineHeight: 1.2,
+      color: '#3f2a1e',
     },
     h3: {
       fontFamily: 'var(--font-heading)',
-      fontSize: '1.5rem',
-      fontWeight: 400,
-      color: '#166534', // garden-800
+      fontSize: { xs: '18px', md: '20px' },
+      fontWeight: 500,
+      letterSpacing: '0.02em',
+      lineHeight: 1.25,
+      color: '#3f2a1e',
     },
     h4: {
-      fontFamily: 'var(--font-heading)',
-      fontSize: '1.25rem',
-      fontWeight: 400,
-      color: '#15803d', // garden-700
-    },
-    h5: {
-      fontFamily: 'var(--font-heading)',
-      fontSize: '1.1rem',
-      fontWeight: 400,
-      color: '#15803d', // garden-700
-    },
-    h6: {
-      fontFamily: 'var(--font-heading)',
+      fontFamily: 'var(--font-body)',
       fontSize: '1rem',
       fontWeight: 400,
-      color: '#15803d', // garden-700
+      lineHeight: 1.6,
+      color: '#3f2a1e',
+    },
+    h5: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      color: '#3f2a1e',
+    },
+    h6: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      color: '#3f2a1e',
     },
     body1: {
       fontFamily: 'var(--font-body)',
-      fontSize: '1rem',
+      fontWeight: 200,
       lineHeight: 1.6,
-      color: '#475569', // slate-600
+      fontSize: { xs: '.8rem', sm: '1.1rem', lg: '1rem' },
+      fontStyle: { xs: 'normal', lg: 'italic' },
+      color: '#3f2a1e',
     },
     body2: {
       fontFamily: 'var(--font-body)',
-      fontSize: '0.875rem',
-      lineHeight: 1.5,
-      color: '#64748b', // slate-500
+      fontWeight: 200,
+      lineHeight: 1.6,
+      fontSize: { xs: '.7rem', sm: '.9rem', lg: '.875rem' },
+      fontStyle: { xs: 'normal', lg: 'italic' },
+      color: '#3f2a1e',
+    },
+    caption: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '0.8rem',
+      lineHeight: 1.4,
+      color: '#3f2a1e',
     },
   },
   shape: {

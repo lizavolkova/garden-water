@@ -35,9 +35,6 @@ export default function NavHeader({
         {/* Left side - Location input */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="body2" sx={{ 
-            color: '#6B7B5C', 
-            fontWeight: 500,
-            fontSize: '0.8rem',
             minWidth: 'fit-content'
           }}>
             📍 Location:

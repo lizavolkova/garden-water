@@ -33,9 +33,6 @@ export default function InputForm({
         variant="h4" 
         component="h2" 
         sx={{
-          color: '#4d5239',
-          fontWeight: 500,
-          fontSize: { xs: '16px', sm: '12px' },
           mb: 0,
           textAlign: 'center',
           position: 'relative',
@@ -65,9 +62,9 @@ export default function InputForm({
                 height={48}
                 unoptimized
               />
-              <Box sx={{ color: '#5A6B4D', fontStyle: 'italic', fontSize: '0.95rem', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
+              <Typography variant="body1" sx={{ textAlign: 'center' }}>
                 Consulting with Wynn's gnome wisdom...
-              </Box>
+              </Typography>
             </Box>
           ) : (
             // Normal state - show input and button

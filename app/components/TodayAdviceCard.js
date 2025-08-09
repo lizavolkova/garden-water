@@ -90,22 +90,16 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
         bgcolor: getBackgroundColor(currentWaterState),
         borderRadius: '0',
         boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
-        p: 0,
+        p: 2,
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      <Typography 
-        variant="h4" 
-        component="h2" 
+      <Typography  
+        variant="h3"
+        component="h3" 
         sx={{
-          color: '#3f2a14',
-          fontWeight: 500,
-          fontSize: { xs: '12px', sm: '12px' },
-          fontFamily: 'var(--font-heading)',
           mb: 0,
-          pl: 2,
-          pt: 2,
           textAlign: 'left',
           position: 'relative',
           zIndex: 20
@@ -151,15 +145,12 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
       >
         {/* Main advice title with status */}
       <Typography 
-        variant="h5" 
+      variant="body1"
         sx={{ 
-          fontWeight: 600,
-          fontSize: { xs: '1.0rem', md: '1.5rem' },
           mb: 0,
           pt: 2,
           pl: 0,
           pr: 2,
-          color: '#3f2a14',
           textAlign: 'left',
           position: 'relative',
           zIndex: 20
@@ -172,71 +163,20 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
         <Typography 
         variant="body1" 
         sx={{ 
-            color: '#3f2a14',
-            lineHeight: 1.6,
-            fontSize: { xs: '0.9rem', sm: '0.95rem', md: '1rem' },
             mb: 2,
             opacity: 0.9
         }}
         >
         {todayAdvice.reason}
         </Typography>
-        
-        {/* Debug info - only show in debug mode */}
-        {isDebugMode && (
-          <Box mt={3}>
-            {todayAdvice.keyFactors && todayAdvice.keyFactors.length > 0 && (
-              <Box mb={2}>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                  Key factors considered:
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {todayAdvice.keyFactors.map((factor, index) => (
-                    <Chip 
-                      key={index} 
-                      label={factor} 
-                      size="small" 
-                      variant="outlined" 
-                      color="primary"
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-            
-            <Box display="flex" justifyContent="center">
-              <Chip
-                label={`${todayAdvice.confidence} confidence`}
-                size="small"
-                variant="outlined"
-                sx={{ 
-                  fontSize: '0.7rem',
-                  color: '#616161',
-                  borderColor: '#E0E0E0',
-                  bgcolor: '#FAFAFA'
-                }}
-              />
-            </Box>
-          </Box>
-        )}
       </Box>
       </Box>
       
       {/* Additional advice if available */}
       {todayAdvice.advice && (
             <Typography 
-              variant="body2" 
-              sx={{ 
-                color: '#3f2a14',
-                lineHeight: 1.5,
-                fontSize: { xs: '0.85rem', sm: '0.9rem', md: '0.95rem' },
-                fontStyle: 'italic',
-                opacity: 0.8,
-                px: 3,
-                pb: 3
-              }}
-            >
-              {todayAdvice.advice}
+              variant="caption" >
+              💡{todayAdvice.advice}
             </Typography>
           )}
     </Card>
