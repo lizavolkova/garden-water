@@ -434,7 +434,7 @@ export default function WeeklyTable({
                         color: '#3f2a1e',
                         lineHeight: 1.5
                       }}>
-                        Wynn's Reasoning:
+                        Wynn&apos;s Reasoning:
                       </Typography>
                       <Typography variant="caption" sx={{
                         color: '#3f2a1e',

@@ -63,7 +63,7 @@ export default function InputForm({
                 unoptimized
               />
               <Typography variant="body1" sx={{ textAlign: 'center' }}>
-                Consulting with Wynn's gnome wisdom...
+                Consulting with Wynn&apos;s gnome wisdom...
               </Typography>
             </Box>
           ) : (

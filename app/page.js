@@ -318,7 +318,7 @@ export default function Home() {
                             sx={{ color: '#6B7B5C' }}
                           />
                           <Typography sx={{ color: '#7A8471', fontStyle: 'italic', textAlign: 'center' }}>
-                            Consulting with Wynn's gnome wisdom...
+                            Consulting with Wynn&apos;s gnome wisdom...
                           </Typography>
                         </Box>
                       ) : (!weatherData && !wateringAdvice) ? (
@@ -424,7 +424,7 @@ export default function Home() {
                       unoptimized
                     />
                     <Typography sx={{ color: '#4d5239', fontStyle: 'italic', textAlign: 'center', fontFamily: 'var(--font-body)' }}>
-                      Consulting with Wynn's gnome wisdom...
+                      Consulting with Wynn&apos;s gnome wisdom...
                     </Typography>
                   </Box>
                 </CardContent>
