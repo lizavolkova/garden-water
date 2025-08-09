@@ -242,23 +242,9 @@ export default function WeeklyTable({
             // Get seasonal colors
             const seasonalColors = getSeasonalColors(CURRENT_SEASON);
             
-            // Use seasonal colors for current/future cards, #fffcec for past cards
-            let cardBg, cardBorder;
-            if (isPast) {
-              cardBg = '#fffcec';
-              cardBorder = '#f5f1e8';
-            } else if (debugMode) {
-              cardBg = isTodayRow ? '#F3F9FF' : '#FEFFFE';
-              cardBorder = isTodayRow ? '#2196F3' : '#E8EDE4';
-            } else {
-              // Use seasonal decision colors with fading for current/future cards
-              const seasonalDecisionBg = actionText === 'Yes' ? seasonalColors.yes :
-                                       actionText === 'Maybe' ? seasonalColors.maybe : 
-                                       seasonalColors.no;
-              cardBg = getFadedColor(seasonalDecisionBg, fadeFactor);
-              // Make border color match the card background but slightly darker
-              cardBorder = getFadedColor(seasonalDecisionBg, Math.max(0.7, fadeFactor));
-            }
+            // Use white background for all cards
+            let cardBg = '#ffffff';
+            let cardBorder = '#e5e7eb'; // Light gray border
             
             // Get seasonal text color that matches the card background
             let seasonalTextColor = actionColor; // Default fallback
@@ -308,10 +294,10 @@ export default function WeeklyTable({
                     `1px solid ${cardBorder}`,
                   boxShadow: isPast ? '0 2px 8px rgba(0, 0, 0, 0.04)' : 'none',
                   borderRadius: { xs: '12px', md: '8px' },
-                  opacity: isPast ? { xs: 0.7, md: 0.6 } : 1,
+                  opacity: 1,
                   transform: 'scale(1)',
                   '&:hover': isPast ? {} : {
-                    bgcolor: debugMode ? '#F9FBF7' : cardBg,
+                    bgcolor: '#ffffff',
                     transform: { xs: 'scale(1.01)', md: 'scale(1.001)' },
                   },
                   transition: 'all 0.2s ease-in-out'
@@ -319,252 +305,234 @@ export default function WeeklyTable({
               >
                 <CardContent sx={{ 
                   p: 0,
+                  position: 'relative',
                   '&:last-child': {
                     paddingBottom: 0
                   }
                 }}>
-                  {/* Card Content - matching HTML structure */}
-                  <Box sx={{ p: isPast ? 1 : 2 }}>
-                    {/* Top section: Icon, Date/Temp, Action Button */}
+                  {/* Card Content with Weather Icon in flex layout */}
+                  <Box sx={{ 
+                    p: isExpanded ? 2.5 : 2, 
+                    display: 'flex',
+                    alignItems: isExpanded ? 'flex-start' : 'center',
+                    gap: 2
+                  }}>
+                    {/* Weather Icon as part of flex layout */}
                     <Box sx={{
+                      width: '48px',
+                      height: '48px',
+                      flexShrink: 0,
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: isPast ? 'center' : 'flex-start',
-                      mb: isPast ? 0 : 1
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
-                      {/* Left: Weather Icon + Date/Temp */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: isPast ? 2 : 3 }}>
-                        {/* Weather Icon */}
-                        <Box sx={{ 
-                          width: isPast ? '48px' : '64px',
-                          height: isPast ? '48px' : '64px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          {(() => {
-                            let iconSrc;
-                            if (debugMode) {
-                              iconSrc = getWeatherIcon(day.description || 'clear', day.temp_max || 70);
-                            } else if (weather?.icon) {
-                              // Check if it's already a custom icon path or emoji
-                              if (typeof weather.icon === 'string' && weather.icon.startsWith('/weather-icons/')) {
-                                iconSrc = weather.icon;
-                              } else if (typeof weather.icon === 'string' && weather.icon.includes('png')) {
-                                iconSrc = weather.icon;
-                              } else {
-                                // Map from weather description to custom icon
-                                iconSrc = getWeatherIcon(weather.description || 'clear', day.temp_max || weather.temp || 70);
-                              }
-                            } else {
-                              iconSrc = getWeatherIcon('clear', day.temp_max || 70);
-                            }
+                      {(() => {
+                        let iconSrc;
+                        if (debugMode) {
+                          iconSrc = getWeatherIcon(day.description || 'clear', day.temp_max || 70);
+                        } else if (weather?.icon) {
+                          // Check if it's already a custom icon path or emoji
+                          if (typeof weather.icon === 'string' && weather.icon.startsWith('/weather-icons/')) {
+                            iconSrc = weather.icon;
+                          } else if (typeof weather.icon === 'string' && weather.icon.includes('png')) {
+                            iconSrc = weather.icon;
+                          } else {
+                            // Map from weather description to custom icon
+                            iconSrc = getWeatherIcon(weather.description || 'clear', day.temp_max || weather.temp || 70);
+                          }
+                        } else {
+                          iconSrc = getWeatherIcon('clear', day.temp_max || 70);
+                        }
 
-                            return (
-                              <img 
-                                src={iconSrc}
-                                alt="Weather icon"
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'contain'
-                                }}
-                                onError={(e) => {
-                                  // Fallback to emoji if image fails to load
-                                  const fallbackEmoji = debugMode ? 
-                                    getWeatherIconEmoji(day.description || 'clear', day.temp_max || 70) :
-                                    getWeatherIconEmoji(weather?.description || 'clear', day.temp_max || 70);
-                                  e.target.style.display = 'none';
-                                  e.target.parentNode.innerHTML = `<span style="font-size: ${isPast ? '2rem' : '3rem'}">${fallbackEmoji}</span>`;
-                                }}
-                              />
-                            );
-                          })()}
-                        </Box>
-                        
-                        {/* Date and Temperature */}
+                        return (
+                          <img 
+                            src={iconSrc}
+                            alt="Weather icon"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain'
+                            }}
+                            onError={(e) => {
+                              // Fallback to emoji if image fails to load
+                              const fallbackEmoji = debugMode ? 
+                                getWeatherIconEmoji(day.description || 'clear', day.temp_max || 70) :
+                                getWeatherIconEmoji(weather?.description || 'clear', day.temp_max || 70);
+                              e.target.style.display = 'none';
+                              e.target.parentNode.innerHTML = `<span style="font-size: ${isPast ? '2rem' : '3rem'}; opacity: 0.15;">${fallbackEmoji}</span>`;
+                            }}
+                          />
+                        );
+                      })()}
+                    </Box>
+
+                    {/* Content section */}
+                    <Box sx={{ flex: 1 }}>
+                      {!isExpanded ? (
+                      // Collapsed card layout - single row
+                      <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
                         <Box>
-                          {/* Date Line */}
                           <Typography sx={{
                             fontWeight: 700,
-                            fontSize: isPast ? '1rem' : { xs: '1.1rem', md: '1.25rem' },
-                            color: isPast ? '#374151' : 
-                                   (actionText === 'Yes' ? '#1e3a8a' :
-                                    actionText === 'Maybe' ? '#854d0e' :
-                                    actionText === 'No' ? '#14532d' : '#374151'),
-                            lineHeight: 1.2,
-                            mb: isPast ? 0 : 0.5
+                            fontSize: '1.125rem',
+                            color: '#1f2937',
+                            mb: 0.25
                           }}>
                             {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}
-                            {isPast && (
-                              <Box component="span" sx={{ 
-                                ml: 1, 
-                                fontWeight: 400, 
-                                color: '#6b7280' 
-                              }}>
-                                {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  day: 'numeric'
-                                }).toUpperCase()}
-                              </Box>
-                            )}
                           </Typography>
-                          
-                          {/* Temperature Line */}
                           <Typography sx={{
-                            fontSize: isPast ? '0.7rem' : { xs: '0.875rem', md: '1.125rem' },
-                            color: isPast ? '#4b5563' :
-                                   (actionText === 'Yes' ? '#1e40af' :
-                                    actionText === 'Maybe' ? '#92400e' :
-                                    actionText === 'No' ? '#166534' : '#4b5563'),
-                            lineHeight: 1
+                            fontSize: '0.875rem',
+                            color: '#6b7280'
                           }}>
-                            {(() => {
-                              const temp = debugMode && day.temp_max ? 
-                                `${Math.round(day.temp_max)}°/${Math.round(day.temp_min)}°F` :
-                                weather?.temp || '--°';
-                              
-                              if (isPast) {
-                                const desc = debugMode && day.description ? 
-                                  day.description :
-                                  weather?.description || 'Clear';
-                                const rainAmount = (() => {
-                                  let amount = 0;
-                                  if (debugMode && day.rain !== undefined) {
-                                    amount = day.rain;
-                                  } else if (weather?.rain !== undefined) {
-                                    amount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
-                                  } else if (day.rain !== undefined) {
-                                    amount = day.rain;
-                                  }
-                                  return amount.toFixed(2);
-                                })();
-                                return `${temp} - ${desc.charAt(0).toUpperCase() + desc.slice(1)} - ${rainAmount}"`;
-                              }
-                              return temp;
-                            })()}
+                            {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric'
+                            }).toUpperCase()}
+                            <Box component="span" sx={{ fontWeight: 600, color: '#374151', ml: 2 }}>
+                              {(() => {
+                                return debugMode && day.temp_max ? 
+                                  `${Math.round(day.temp_max)}°/${Math.round(day.temp_min)}°F` :
+                                  weather?.temp || '--°';
+                              })()}
+                            </Box>
                           </Typography>
                         </Box>
-                      </Box>
-                      
-                      {/* Right: Action Button + Expand Icon */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {!isPast && !debugMode && (
                           <Box sx={{
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            px: '0.75rem',
-                            py: '0.25rem',
+                            px: '0.85rem',
+                            py: '0.35rem',
                             borderRadius: '9999px',
                             textTransform: 'uppercase',
                             ...(actionText === 'Yes' && {
-                              backgroundColor: '#a8c7fa',
-                              color: '#1c3d5a'
+                              backgroundColor: '#e8eeff',
+                              color: '#3b5998'
                             }),
                             ...(actionText === 'Maybe' && {
-                              backgroundColor: '#e9d184',
-                              color: '#5d4a1a'
+                              backgroundColor: '#efe2ab',
+                              color: '#7a6824'
                             }),
                             ...(actionText === 'No' && {
-                              backgroundColor: '#b8c4a9',
-                              color: '#3a4a2a'
+                              backgroundColor: '#cad597',
+                              color: '#4a5522'
                             })
                           }}>
                             {actionText}
                           </Box>
                         )}
-                        <Box sx={{ 
-                          color: isPast ? '#9ca3af' :
-                                 (actionText === 'Yes' ? '#1e40af' :
-                                  actionText === 'Maybe' ? '#92400e' :
-                                  actionText === 'No' ? '#166534' : '#9ca3af'),
-                          fontSize: '1.5rem'
-                        }}>
-                          {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                         </Box>
-                      </Box>
-                    </Box>
-
-                    {/* Weather description and rain gauge */}
-                    <Box sx={{
-                      display: 'flex',
-                      justifyContent: isPast ? 'flex-end' : 'space-between',
-                      alignItems: 'center',
-                      fontSize: '0.875rem',
-                      mt: isPast ? 0.5 : 1
-                    }}>
-                      {/* Weather Description - only show for non-past cards in compressed view */}
-                      {!isPast && (
-                        <Typography sx={{
-                          fontWeight: 500,
-                          color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.7)' :
-                                 actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.7)' :
-                                 actionText === 'No' ? 'rgba(20, 83, 45, 0.7)' : 'rgba(75, 85, 99, 0.7)',
-                          textTransform: 'capitalize',
-                          fontSize: '0.875rem'
-                        }}>
-                          {debugMode && day.description ? 
-                            day.description :
-                            weather?.description || 'Clear'
-                          }
-                        </Typography>
-                      )}
-                      
-                      {/* Rain gauge */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {/* Water drop icon for all cards */}
-                        <Box sx={{ 
-                          fontSize: isPast ? '0.75rem' : '0.875rem',
-                          color: isPast ? '#9ca3af' : 'rgba(59, 130, 246, 0.8)',
-                          lineHeight: 1
-                        }}>
-                          💧
-                        </Box>
-                        
-                        {/* Progress bar container */}
-                        <Box sx={{
-                          width: isPast ? '60px' : '80px', // Adjusted for icon on all cards
-                          height: isPast ? '6px' : '8px',
-                          borderRadius: '9999px',
-                          overflow: 'hidden',
-                          backgroundColor: isPast ? 'rgba(156, 163, 175, 0.3)' : 'rgba(59, 130, 246, 0.3)' // Blue for all non-past, grey for past
-                        }}>
+                      ) : (
+                        // Expanded card layout
+                        <>
+                          {/* Top section */}
                           <Box sx={{
-                            height: '100%',
-                            backgroundColor: isPast ? '#9ca3af' : '#3b82f6', // Blue for all non-past, grey for past
-                            width: (() => {
-                              let rainAmount = 0;
-                              if (debugMode && day.rain !== undefined) {
-                                rainAmount = day.rain;
-                              } else if (weather?.rain !== undefined) {
-                                rainAmount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
-                              } else if (day.rain !== undefined) {
-                                rainAmount = day.rain;
-                              }
-                              return `${Math.min(100, (rainAmount / 1) * 100)}%`;
-                            })()
-                          }} />
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                          <Box>
+                            <Typography sx={{
+                              fontWeight: 700,
+                              fontSize: '1.25rem',
+                              color: '#1f2937',
+                              mb: 0.25
+                            }}>
+                              {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}
+                            </Typography>
+                            <Typography sx={{
+                              fontSize: '0.875rem',
+                              color: '#6b7280'
+                            }}>
+                              {new Date(dayDate + 'T12:00:00').toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric'
+                              }).toUpperCase()}
+                            </Typography>
+                          </Box>
+                          {!isPast && !debugMode && (
+                            <Box sx={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              px: '0.85rem',
+                              py: '0.35rem',
+                              borderRadius: '9999px',
+                              textTransform: 'uppercase',
+                              ...(actionText === 'Yes' && {
+                                backgroundColor: '#e8eeff',
+                                color: '#3b5998'
+                              }),
+                              ...(actionText === 'Maybe' && {
+                                backgroundColor: '#efe2ab',
+                                color: '#7a6824'
+                              }),
+                              ...(actionText === 'No' && {
+                                backgroundColor: '#cad597',
+                                color: '#4a5522'
+                              })
+                            }}>
+                              {actionText}
+                            </Box>
+                          )}
                         </Box>
-                        
-                        {/* Rain amount */}
-                        <Typography sx={{
-                          fontWeight: 600,
-                          fontSize: isPast ? '0.75rem' : '0.875rem',
-                          color: isPast ? '#9ca3af' : 'rgba(59, 130, 246, 0.8)' // Blue for all non-past, grey for past
-                        }}>
-                          {(() => {
-                            let rainAmount = 0;
-                            if (debugMode && day.rain !== undefined) {
-                              rainAmount = day.rain;
-                            } else if (weather?.rain !== undefined) {
-                              rainAmount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
-                            } else if (day.rain !== undefined) {
-                              rainAmount = day.rain;
-                            }
-                            return `${rainAmount.toFixed(2)}"`;
-                          })()}
-                        </Typography>
-                      </Box>
+
+                        {/* Details section - only shown when expanded */}
+                        <Box>
+                          {/* Weather info row */}
+                          <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '0.875rem'                        
+                          }}>
+                            <Typography sx={{
+                              fontWeight: 600,
+                              color: '#4b5563'
+                            }}>
+                              {(() => {
+                                const temp = debugMode && day.temp_max ? 
+                                  `${Math.round(day.temp_max)}°/${Math.round(day.temp_min)}°F` :
+                                  weather?.temp || '--°';
+                                const desc = debugMode && day.description ? 
+                                  day.description :
+                                  weather?.description || 'Clear';
+                                return `${temp} - ${desc.charAt(0).toUpperCase() + desc.slice(1)}`;
+                              })()}
+                            </Typography>                            
+                            {/* Rain gauge */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{
+                                width: '80px',
+                                height: '8px',
+                                borderRadius: '9999px',
+                                overflow: 'hidden',
+                                backgroundColor: '#e5e7eb'
+                              }}>
+                                <Box sx={{
+                                  height: '100%',
+                                  backgroundColor: '#93c5fd',
+                                  width: (() => {
+                                    let rainAmount = 0;
+                                    if (debugMode && day.rain !== undefined) {
+                                      rainAmount = day.rain;
+                                    } else if (weather?.rain !== undefined) {
+                                      rainAmount = typeof weather.rain === 'number' ? weather.rain : parseFloat(weather.rain) || 0;
+                                    } else if (day.rain !== undefined) {
+                                      rainAmount = day.rain;
+                                    }
+                                    return `${Math.min(100, (rainAmount / 1) * 100)}%`;
+                                  })()
+                                }} />
+                              </Box>
+                            </Box>
+                          </Box>
+                          </Box>
+                        </>
+                      )}
                     </Box>
                   </Box>
                   
@@ -572,7 +540,7 @@ export default function WeeklyTable({
                   
                   {/* Mobile + Past Desktop: Expanded View */}
                   {isExpanded && (
-                    <Box mt={0} pt={2} borderTop="1px solid #F0F3EC" sx={{ display: { xs: 'block', md: isPast ? 'block' : 'none' } }}>
+                    <Box mt={0} pt={0.5} pl={2} sx={{ display: { xs: 'block', md: isPast ? 'block' : 'none' } }}>
                       {debugMode ? (
                         // Debug mode expanded content
                         <Grid container spacing={2}>
@@ -604,17 +572,15 @@ export default function WeeklyTable({
                       ) : (
                         // AI mode expanded content
                         <Box sx={{
-                          mt: 2,
-                          pt: 2,
-                          px: isPast ? 2 : 3,
-                          pb: isPast ? 2 : 3,
+                          pr: isPast ? 2 : 3,
+                          pb: 1,
                           borderTop: `1px solid ${actionText === 'Yes' ? 'rgba(30, 58, 138, 0.2)' :
                                                   actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.2)' :
                                                   actionText === 'No' ? 'rgba(20, 83, 45, 0.2)' : 'rgba(75, 85, 99, 0.2)'}`
                         }}>
                           {/* Weather description for past cards in expanded view */}
                           {isPast && (
-                            <Box sx={{ mb: day.reason ? 2 : 0 }}>
+                            <Box sx={{ mb: day.reason ? 0.5 : 0 }}>
                               <Typography sx={{
                                 fontSize: '0.8rem',
                                 fontWeight: 500,
@@ -629,16 +595,11 @@ export default function WeeklyTable({
                               </Typography>
                             </Box>
                           )}
-                          
                           {day.reason && (
                             <Box>
                               <Typography sx={{
-                                fontStyle: 'italic',
+                                pt:1,
                                 fontWeight: 600,
-                                color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.8)' :
-                                       actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.8)' :
-                                       actionText === 'No' ? 'rgba(20, 83, 45, 0.8)' : 'rgba(75, 85, 99, 0.8)',
-                                fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : '1rem' },
                                 mb: 1,
                                 fontFamily: 'var(--font-heading)'
                               }}>
@@ -647,9 +608,6 @@ export default function WeeklyTable({
                               <Typography sx={{
                                 fontSize: { xs: isPast ? '0.8rem' : '0.9rem', md: isPast ? '0.8rem' : '0.95rem' },
                                 lineHeight: 1.4,
-                                color: actionText === 'Yes' ? 'rgba(30, 58, 138, 0.7)' :
-                                       actionText === 'Maybe' ? 'rgba(133, 77, 14, 0.7)' :
-                                       actionText === 'No' ? 'rgba(20, 83, 45, 0.7)' : 'rgba(75, 85, 99, 0.7)'
                               }}>
                                 {day.reason}
                               </Typography>
