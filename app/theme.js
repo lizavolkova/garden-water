@@ -108,9 +108,9 @@ const theme = createTheme({
           // Font variables for easy experimentation
           // To test different combinations, simply change these variables:
           // 
-          // CURRENT: Cinzel Decorative (headings) + Literata (body)
-          '--font-heading': '"Cinzel Decorative", "Times New Roman", serif',
-          '--font-body': '"Literata", "Times New Roman", serif',
+          // CURRENT: Alegreya SC (headings) + Literata (body)
+          '--font-heading': 'Alegreya SC, Georgia, serif',
+          '--font-body': 'Literata, Georgia, serif',
           //
           // OTHER OPTIONS to try:
           // '--font-heading': '"Literata", "Times New Roman", serif', // All Literata

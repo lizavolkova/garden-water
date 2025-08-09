@@ -6,11 +6,11 @@ export default function IntroText() {
   return (
     <Box sx={{ textAlign: 'center', mb: { xs: '-50px', lg: 4 }, px: 3 }}>
       <Typography 
-        variant="h1" 
-        component="h1" 
+        variant="h2" 
+        component="h2" 
         sx={{
           fontWeight: 400,
-          fontSize: { xs: '.9rem', sm: '3rem', md: '3.2rem' },
+          fontSize: { xs: '24px', md: '3.2rem' },
           lineHeight: 1.1,
           letterSpacing: '0.01em',
           mb: 2,
@@ -32,7 +32,7 @@ export default function IntroText() {
           lineHeight: 1.1,
           letterSpacing: '0.01em',
           mb: 2,
-          fontFamily: 'var(--font-heading)',
+          fontFamily: 'var(--font-cinzel-decorative)',
           color: '#3f2a14',
           maxWidth: 'sm',
           mx: 'auto'

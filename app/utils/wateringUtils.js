@@ -85,19 +85,19 @@ export const getWateringDecision = (day, isPast, debugMode) => {
     
     switch (status) {
       case 'yes':
-        actionText = 'Yes';
+        actionText = 'Water';
         actionColor = '#1976D2';
         weatherIcon = '💧';
         decisionBg = '#E3F2FD';
         break;
       case 'maybe':
-        actionText = 'Maybe';
+        actionText = 'Check';
         actionColor = '#F57C00';
         weatherIcon = '🌱';
         decisionBg = '#FFF3E0';
         break;
       default:
-        actionText = 'No';
+        actionText = 'Skip';
         actionColor = '#2E7D32';
         weatherIcon = '🚫';
         decisionBg = '#E8F5E8';

@@ -1,13 +1,14 @@
-import { Geist, Geist_Mono, Literata, Cinzel_Decorative } from "next/font/google";
+import { Inter, Geist_Mono, Literata, Cinzel_Decorative, Alegreya_SC } from "next/font/google";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -25,6 +26,13 @@ const cinzelDecorative = Cinzel_Decorative({
   variable: "--font-cinzel-decorative",
   subsets: ["latin"],
   weight: ["400", "700", "900"],
+});
+
+const alegreyaSC = Alegreya_SC({
+  variable: "--font-alegreya-sc",
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "800", "900"],
+  display: "swap",
 });
 
 export const metadata = {
@@ -45,7 +53,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${cinzelDecorative.variable} antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${literata.variable} ${cinzelDecorative.variable} ${alegreyaSC.variable} antialiased`}
         id="__next"
         style={{ backgroundColor: '#dfdbc7' }}
       >
