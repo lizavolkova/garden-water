@@ -51,10 +51,11 @@ export default function MobileMenu({
       {/* Hamburger Menu Button - Fixed position */}
       <Box sx={{ 
         position: 'fixed', 
-        top: 16, 
-        right: 16, 
-        zIndex: 1100,
-        display: { xs: 'block', lg: 'none' } // Only show on mobile
+        top: 'env(safe-area-inset-top, 16px)', 
+        right: 'env(safe-area-inset-right, 16px)', 
+        zIndex: 1300,
+        display: { xs: 'block', lg: 'none' }, // Only show on mobile
+        pointerEvents: 'auto'
       }}>
         <IconButton
           onClick={handleMenuToggle}
@@ -79,6 +80,7 @@ export default function MobileMenu({
         onClose={handleClose}
         sx={{
           display: { xs: 'block', lg: 'none' }, // Only show on mobile
+          zIndex: 1400,
           '& .MuiDrawer-paper': {
             width: 320,
             bgcolor: '#FEFFFE',

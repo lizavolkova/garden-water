@@ -128,7 +128,11 @@ export default function WeeklyTable({
             }}
           >
             <Typography variant="body1" sx={{ 
-              mb: 2
+              mb: 2,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
             }}>
               {wateringAdvice.weekSummary}
             </Typography>
@@ -139,11 +143,19 @@ export default function WeeklyTable({
                 lineHeight: '2rem',
                 ml: '-8px',
               display: 'block',
-              textAlign: 'left'
+              textAlign: 'left',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
             }}>🔮</Typography>
             <Typography variant="caption" sx={{ 
               display: 'block',
-              textAlign: 'left'
+              textAlign: 'left',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
             }}>
             My gnome magic gets a bit hazy looking at the far-off days. Pop back tomorrow for a clearer story!
             </Typography>

@@ -12,7 +12,7 @@ const TEST_OVERRIDE = null; // Set to 'yes', 'maybe', 'no', or null to disable
 // Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasonal colors
 const CURRENT_SEASON = 'summer';
 
-export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
+export default function TodayAdviceCard({ todayAdvice, isDebugMode, locationData }) {
   const [selectedCopy, setSelectedCopy] = useState(null);
   
   // Memoize copy variations to avoid recreating on every render
@@ -92,10 +92,17 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
         boxShadow: '0 3px 16px rgba(107, 123, 92, 0.12)',
         p: 2,
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none'
       }}
     >
-      <Typography  
+        <Box sx={{
+            pb: 2
+        }}>
+        <Typography  
         variant="h3"
         component="h3" 
         sx={{
@@ -108,6 +115,20 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
         Should I water my garden today?
       </Typography>
       
+      <Typography  
+        variant="caption"
+        sx={{
+          fontSize: '0.8rem',
+          textAlign: 'left',
+          position: 'relative',
+          zIndex: 20
+        }}
+      >
+        {locationData ? `${locationData.city}, ${locationData.state}` : 'Loading location...'}
+      </Typography>
+        </Box>
+      
+
       <Box sx={{
         display: 'flex',
         alignItems: 'center'

@@ -36,23 +36,35 @@ export async function GET(request) {
   try {
     // Fetch weather data from selected API
     console.log(`[Weather API] Fetching weather data using ${weatherAPI} API`);
+    let weatherResponse;
     let weatherData;
+    let locationData = null;
     const startTime = Date.now();
     
     switch (weatherAPI) {
       case 'nws':
-        weatherData = await fetchNWSWeatherData(zipCode);
+        weatherResponse = await fetchNWSWeatherData(zipCode);
         break;
       case 'openmeteo':
-        weatherData = await fetchOpenMeteoWeatherData(zipCode);
+        weatherResponse = await fetchOpenMeteoWeatherData(zipCode);
         break;
       case 'visualcrossing':
-        weatherData = await fetchVisualCrossingWeatherData(zipCode);
+        weatherResponse = await fetchVisualCrossingWeatherData(zipCode);
         break;
       case 'openweather':
       default:
-        weatherData = await fetchOpenWeatherData(zipCode);
+        weatherResponse = await fetchOpenWeatherData(zipCode);
         break;
+    }
+    
+    // Handle both old format (array) and new format (object with weather and location)
+    if (Array.isArray(weatherResponse)) {
+      // Old format - just weather data
+      weatherData = weatherResponse;
+    } else {
+      // New format - extract weather data and location info
+      weatherData = weatherResponse.weather;
+      locationData = weatherResponse.location;
     }
     
     const fetchTime = Date.now() - startTime;
@@ -63,6 +75,7 @@ export async function GET(request) {
       console.log(`[Weather API] Debug mode - returning raw weather data only (no AI tokens used)`);
       return Response.json({
         weather: weatherData,
+        location: locationData,
         debug: true,
         api: weatherAPI,
         totalTime: fetchTime,
@@ -85,6 +98,7 @@ export async function GET(request) {
     console.log(`[Weather API] Request completed successfully - Total time: ${Date.now() - startTime}ms`);
     return Response.json({
       weather: weatherData,
+      location: locationData,
       advice: advice.weeklyAdvice,
       todayAdvice: advice.todayAdvice
     });

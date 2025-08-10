@@ -12,20 +12,10 @@ export async function fetchOpenWeatherData(zipCode) {
 
   console.log('[OpenWeather] API key found, fetching coordinates...');
 
-  // First, get coordinates from zip code
-  const geoResponse = await fetch(
-    `https://api.openweathermap.org/geo/1.0/zip?zip=${zipCode},US&appid=${API_KEY}`
-  );
+  // Get coordinates and location info from zip code
+  const { lat, lon, city, state } = await fetchLocationFromZipCode(zipCode);
+  console.log(`[OpenWeather] Location found: ${city}, ${state} (${lat}, ${lon})`);
   
-  if (!geoResponse.ok) {
-    console.error('[OpenWeather] Geocoding failed:', geoResponse.status);
-    throw new Error('Invalid ZIP code or failed to fetch location data', geoResponse);
-  }
-  
-  const geoData = await geoResponse.json();
-  const { lat, lon } = geoData;
-  console.log(`[OpenWeather] Coordinates found: ${lat}, ${lon}`);
-
   // Get both historical (3 days prior) and forecast (7 days future) data
   console.log('[OpenWeather] Fetching historical and forecast data...');
   
@@ -64,7 +54,10 @@ export async function fetchOpenWeatherData(zipCode) {
   const dailyData = processOpenWeatherData(historicalData, forecastData);
   console.log(`[OpenWeather] Processed into ${dailyData.length} daily summaries`);
   
-  return dailyData;
+  return {
+    weather: dailyData,
+    location: { city, state, zipCode }
+  };
 }
 
 function processOpenWeatherData(historicalData, forecastData) {

@@ -18,10 +18,12 @@ export async function fetchLocationFromZipCode(zipCode) {
   const geoData = await geoResponse.json();
   const lat = parseFloat(geoData.places[0].latitude);
   const lon = parseFloat(geoData.places[0].longitude);
+  const city = geoData.places[0]['place name'];
+  const state = geoData.places[0].state;
   
-  console.log(`[Weather Utils] Location found: ${geoData.places[0]['place name']}, ${geoData.places[0].state} (${lat}, ${lon})`);
+  console.log(`[Weather Utils] Location found: ${city}, ${state} (${lat}, ${lon})`);
   
-  return { lat, lon, geoData };
+  return { lat, lon, city, state, geoData };
 }
 
 export function generateDemoWeatherData() {

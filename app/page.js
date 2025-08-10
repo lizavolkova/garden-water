@@ -73,6 +73,7 @@ export default function Home() {
   // State management
   const [zipCode, setZipCode] = useState('');
   const [weatherData, setWeatherData] = useState(null);
+  const [locationData, setLocationData] = useState(null);
   const [wateringAdvice, setWateringAdvice] = useState(null);
   const [todayAdvice, setTodayAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -82,11 +83,29 @@ export default function Home() {
   const [weatherAPI, setWeatherAPI] = useState('visualcrossing');
   const [debugMode, setDebugMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Set up client-side rendering flag
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Handle scroll-based mobile menu visibility
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      // Show menu after scrolling down 100px or if at top and has data
+      setShowMobileMenu(scrollY > 100 || (scrollY === 0 && (weatherData || wateringAdvice)));
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [weatherData, wateringAdvice]);
 
   // Check for debug mode on mount
   useEffect(() => {
@@ -151,6 +170,7 @@ export default function Home() {
         const cachedData = getCachedData(zip);
         if (cachedData) {
           setWeatherData(cachedData.weather);
+          setLocationData(cachedData.location);
           // Only set advice data if not in debug mode and we have advice data
           if (!debugMode && cachedData.advice) {
             setWateringAdvice(cachedData.advice);
@@ -180,6 +200,7 @@ export default function Home() {
       
       if (data.weather) {
         setWeatherData(data.weather);
+        setLocationData(data.location);
         
         if (!debugMode && data.advice) {
           setWateringAdvice(data.advice);
@@ -187,10 +208,10 @@ export default function Home() {
           setTodayAdvice(data.todayAdvice || todaysRec || null);
           
           // Cache the data
-          setCachedData(zip, data.weather, data.advice, data.todayAdvice || todaysRec);
+          setCachedData(zip, data.weather, data.advice, data.todayAdvice || todaysRec, data.location);
         } else {
           // Debug mode or no advice - just cache weather
-          setCachedData(zip, data.weather, null, null);
+          setCachedData(zip, data.weather, null, null, data.location);
           setWateringAdvice(null);
           setTodayAdvice(null);
         }
@@ -215,6 +236,7 @@ export default function Home() {
       const cachedData = getCachedData(zip);
       if (cachedData) {
         setWeatherData(cachedData.weather);
+        setLocationData(cachedData.location);
         if (!debugMode && cachedData.advice) {
           setWateringAdvice(cachedData.advice);
           setTodayAdvice(cachedData.todayAdvice || null);
@@ -251,8 +273,8 @@ export default function Home() {
         />
       )}
 
-      {/* Mobile Menu - Only show when data exists */}
-      {(weatherData || wateringAdvice) && (
+      {/* Mobile Menu - Show based on scroll and data state */}
+      {showMobileMenu && (
         <MobileMenu 
           zipCode={zipCode}
           setZipCode={setZipCode}
@@ -345,7 +367,8 @@ export default function Home() {
                         <Box sx={{ height: '100%' }}>
                           <TodayAdviceCard 
                             todayAdvice={todayAdvice} 
-                            isDebugMode={debugMode} 
+                            isDebugMode={debugMode}
+                            locationData={locationData}
                             compact={true}
                           />
                         </Box>
@@ -450,7 +473,8 @@ export default function Home() {
               <MobileLayoutSection>
                 <TodayAdviceCard 
                   todayAdvice={todayAdvice} 
-                  isDebugMode={debugMode} 
+                  isDebugMode={debugMode}
+                  locationData={locationData}
                 />
               </MobileLayoutSection>
 

@@ -4,8 +4,8 @@ export async function fetchOpenMeteoWeatherData(zipCode) {
   console.log('[OpenMeteo] Starting weather data fetch for ZIP:', zipCode);
   
   try {
-    // First, get coordinates from zip code using a geocoding service
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
+    // First, get coordinates and location info from zip code using a geocoding service
+    const { lat, lon, city, state } = await fetchLocationFromZipCode(zipCode);
 
     // Get extended forecast from Open-Meteo (3 days prior + 7 days future)
     console.log(`[OpenMeteo] Fetching extended forecast for coordinates: ${lat}, ${lon}`);
@@ -35,7 +35,10 @@ export async function fetchOpenMeteoWeatherData(zipCode) {
     const dailyData = processOpenMeteoForecastData(forecastData);
     console.log(`[OpenMeteo] Processed into ${dailyData.length} daily summaries`);
     
-    return dailyData;
+    return {
+      weather: dailyData,
+      location: { city, state, zipCode }
+    };
   } catch (error) {
     console.error('[OpenMeteo] API error:', error);
     throw new Error(`Open-Meteo API failed: ${error.message}`);
