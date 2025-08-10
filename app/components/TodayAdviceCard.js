@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { display } from '@mui/system';
 
 // FOR TESTING: Change this value to 'yes', 'maybe', or 'no' to test different states
-const TEST_OVERRIDE = 'no'; // Set to 'yes', 'maybe', 'no', or null to disable
+const TEST_OVERRIDE = null; // Set to 'yes', 'maybe', 'no', or null to disable
 
 // SEASONAL THEME CONFIGURATION
 // Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasonal colors
@@ -115,7 +115,7 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
     {/* Background Image - positioned as backdrop on right */}
     <Box 
         sx={{ 
-          width: { xs: '100px', md: '150px' },
+          width: { xs: '150px', md: '150px' },
           zIndex: 10,
           display: 'flex',
           alignItems: 'center',
@@ -145,20 +145,37 @@ export default function TodayAdviceCard({ todayAdvice, isDebugMode }) {
       >
         {/* Main advice title with status */}
       <Typography 
-      variant="body1"
+      component="h2"
+      variant="h2"
         sx={{ 
           mb: 0,
           pt: 2,
           pl: 0,
-          pr: 2,
+          pr: 1,
           textAlign: 'left',
           position: 'relative',
           zIndex: 20
         }}
       >
-        {currentWaterState === 'yes' ? 'YES' : 
-         currentWaterState === 'maybe' ? 'MAYBE' : 'NO'}: {selectedCopy.title}
+        {currentWaterState === 'yes' ? 'YES' : currentWaterState === 'maybe' ? 'MAYBE' : 'NO'}
       </Typography>
+
+      <Typography 
+      component="h3"
+      variant="h3"
+        sx={{ 
+          mb: 0,
+          pl: 0,
+          pr: 1,
+          textAlign: 'left',
+          position: 'relative',
+          zIndex: 20
+        }}
+      >
+       {selectedCopy.title} 
+      </Typography>
+
+
         {/* Reason text */}
         <Typography 
         variant="body1" 
