@@ -70,9 +70,11 @@ function processVisualCrossingForecastData(forecastData) {
     const tempMin = day.tempmin || 50;
     const humidity = day.humidity || 50;
     const rain = day.precip || 0; // Already in inches
+    const precipProb = day.precipprob || 0; // Precipitation probability (0-100%)
+    const windSpeed = day.windspeed || 0; // Wind speed in mph
     const description = day.conditions?.toLowerCase() || 'partly cloudy';
     
-    console.log(`[VisualCrossing] Day ${i + 1} (${day.datetime}): ${tempMin}°F - ${tempMax}°F, ${humidity}% humidity, ${rain}" rain, ${description}`);
+    console.log(`[VisualCrossing] Day ${i + 1} (${day.datetime}): ${tempMin}°F - ${tempMax}°F, ${humidity}% humidity, ${rain}" rain (${precipProb}% chance), ${windSpeed} mph wind, ${description}`);
     
     dailyData.push({
       date: day.datetime, // Already in YYYY-MM-DD format
@@ -80,7 +82,9 @@ function processVisualCrossingForecastData(forecastData) {
       temp_min: tempMin,
       humidity: humidity,
       description: description,
-      rain: rain
+      rain: rain,
+      precip_prob: precipProb,
+      wind_speed: windSpeed
     });
   }
   

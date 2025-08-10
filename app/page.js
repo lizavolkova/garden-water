@@ -121,7 +121,10 @@ export default function Home() {
         `${Math.round(convertFahrenheitToCelsius(weatherDay.temp_max))}°/${Math.round(convertFahrenheitToCelsius(weatherDay.temp_min))}°C` : 
         `${Math.round(weatherDay.temp_max)}°/${Math.round(weatherDay.temp_min)}°F`,
       description: weatherDay.description,
-      rain: weatherDay.rain || 0
+      rain: weatherDay.rain || 0,
+      precip_prob: weatherDay.precip_prob || 0,
+      wind_speed: weatherDay.wind_speed || 0,
+      humidity: weatherDay.humidity || 0
     };
   }, [weatherData, temperatureUnit]);
 
@@ -294,7 +297,7 @@ export default function Home() {
         <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
           <Container maxWidth="xl">
             {/* Dynamic Header Section */}
-            <Grid container spacing={6} alignItems="center" justifyContent="center">
+            <Grid container spacing={6} alignItems="center" justifyContent="center" sx={{ maxWidth: 1000, mx: 'auto' }}>
               {/* Left Column - Conditional Content */}
               <Grid size={{ xs: 12, lg: 9 }}>
                 <Box sx={{ maxWidth: 500, textAlign: 'center' }}>
@@ -444,7 +447,7 @@ export default function Home() {
           ) : (
             // Returning User Experience - Header Text + Gnome + Today's Wisdom Card
             <>
-              <MobileLayoutSection contentProps={{ mb: 4 }}>
+              <MobileLayoutSection>
                 <TodayAdviceCard 
                   todayAdvice={todayAdvice} 
                   isDebugMode={debugMode} 
