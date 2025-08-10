@@ -13,8 +13,34 @@ export const formatTemperature = (temp, unit) => {
     `${Math.round(temp)}°F`;
 };
 
-// Weather icon mapping
+// Weather icon mapping - returns custom icon paths
 export const getWeatherIcon = (description, temp_max) => {
+  const desc = description.toLowerCase();
+  
+  if (desc.includes('rain') || desc.includes('shower') || desc.includes('drizzle')) {
+    return '/weather-icons/rain.png';
+  } else if (desc.includes('snow') || desc.includes('sleet')) {
+    return '/weather-icons/snow.png';
+  } else if (desc.includes('storm') || desc.includes('thunder')) {
+    return '/weather-icons/thunderstorm.png';
+  } else if (desc.includes('fog') || desc.includes('mist')) {
+    return '/weather-icons/fog.png';
+  } else if (desc.includes('wind')) {
+    return '/weather-icons/wind.png';
+  } else if (desc.includes('cloud') || desc.includes('overcast')) {
+    return '/weather-icons/cloudy.png';
+  } else if (desc.includes('partly') || (desc.includes('cloud') && (desc.includes('sun') || desc.includes('clear')))) {
+    return '/weather-icons/partly-cloudy.png';
+  } else if (desc.includes('clear') || desc.includes('sunny')) {
+    return '/weather-icons/sunny.png';
+  }
+  
+  // Default fallback
+  return temp_max > 75 ? '/weather-icons/sunny.png' : '/weather-icons/partly-cloudy.png';
+};
+
+// Legacy emoji weather icon mapping (for fallback)
+export const getWeatherIconEmoji = (description, temp_max) => {
   const desc = description.toLowerCase();
   
   if (desc.includes('rain') || desc.includes('shower') || desc.includes('drizzle')) {
@@ -59,19 +85,19 @@ export const getWateringDecision = (day, isPast, debugMode) => {
     
     switch (status) {
       case 'yes':
-        actionText = 'Water Plants';
+        actionText = 'Water';
         actionColor = '#1976D2';
         weatherIcon = '💧';
         decisionBg = '#E3F2FD';
         break;
       case 'maybe':
-        actionText = 'Check Soil';
+        actionText = 'Check';
         actionColor = '#F57C00';
         weatherIcon = '🌱';
         decisionBg = '#FFF3E0';
         break;
       default:
-        actionText = 'No need to water';
+        actionText = 'Skip';
         actionColor = '#2E7D32';
         weatherIcon = '🚫';
         decisionBg = '#E8F5E8';

@@ -46,38 +46,73 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'var(--font-geist-sans), system-ui, -apple-system, sans-serif',
+    fontFamily: 'var(--font-body)', // Default to body font
     h1: {
-      fontSize: '3rem',
-      fontWeight: 300,
-      letterSpacing: '0.05em',
-      color: '#14532d', // garden-900
+      fontFamily: 'var(--font-heading)',
+      fontSize: { xs: '34px', md: '44px' },
+      fontWeight: 700,
+      letterSpacing: 0,
+      lineHeight: 1.1,
+      color: '#3f2a1e',
     },
     h2: {
-      fontSize: '2rem',
-      fontWeight: 300,
-      letterSpacing: '0.025em',
-      color: '#166534', // garden-800
+      fontFamily: 'var(--font-heading)',
+      fontSize: { xs: '24px', md: '32px' },
+      fontWeight: 600,
+      letterSpacing: '0.02em',
+      lineHeight: 1.2,
+      color: '#3f2a1e',
     },
     h3: {
-      fontSize: '1.5rem',
-      fontWeight: 400,
-      color: '#166534', // garden-800
+      fontFamily: 'var(--font-heading)',
+      fontSize: { xs: '18px', md: '20px' },
+      fontWeight: 500,
+      letterSpacing: '0.02em',
+      lineHeight: 1.25,
+      color: '#3f2a1e',
     },
     h4: {
-      fontSize: '1.25rem',
-      fontWeight: 500,
-      color: '#15803d', // garden-700
+      fontFamily: 'var(--font-body)',
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      color: '#3f2a1e',
+    },
+    h5: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      color: '#3f2a1e',
+    },
+    h6: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.6,
+      color: '#3f2a1e',
     },
     body1: {
-      fontSize: '1rem',
+      fontFamily: 'var(--font-body)',
+      fontWeight: 200,
       lineHeight: 1.6,
-      color: '#475569', // slate-600
+      fontSize: { xs: '.8rem', sm: '1.1rem', lg: '1rem' },
+      fontStyle: { xs: 'normal', lg: 'italic' },
+      color: '#3f2a1e',
     },
     body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.5,
-      color: '#64748b', // slate-500
+      fontFamily: 'var(--font-body)',
+      fontWeight: 200,
+      lineHeight: 1.6,
+      fontSize: { xs: '.7rem', sm: '.9rem', lg: '.875rem' },
+      fontStyle: { xs: 'normal', lg: 'italic' },
+      color: '#3f2a1e',
+    },
+    caption: {
+      fontFamily: 'var(--font-body)',
+      fontSize: '0.8rem',
+      lineHeight: 1.4,
+      color: '#3f2a1e',
     },
   },
   shape: {
@@ -86,6 +121,22 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        ':root': {
+          // Font variables for easy experimentation
+          // To test different combinations, simply change these variables:
+          // 
+          // CURRENT: Alegreya SC (headings) + Literata (body)
+          '--font-heading': 'Alegreya SC, Georgia, serif',
+          '--font-body': 'Literata, Georgia, serif',
+          //
+          // OTHER OPTIONS to try:
+          // '--font-heading': '"Literata", "Times New Roman", serif', // All Literata
+          // '--font-body': '"Literata", "Times New Roman", serif',
+          //
+          // Or use CSS variables (after ensuring fonts are loaded):
+          // '--font-heading': 'var(--font-cinzel-decorative)',
+          // '--font-body': 'var(--font-literata)',
+        },
         body: {
           background: 'linear-gradient(135deg, #fbf8f4 0%, #faf5f0 25%, #f0fdf4 100%)',
           minHeight: '100vh',
@@ -100,6 +151,7 @@ const theme = createTheme({
           padding: '12px 24px',
           fontSize: '1rem',
           fontWeight: 600,
+          fontFamily: 'var(--font-body)',
           boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.25)',
           '&:hover': {
             boxShadow: '0 6px 20px 0 rgba(34, 197, 94, 0.35)',

@@ -14,12 +14,7 @@ export default function Disclaimer() {
         textAlign: 'center'
       }}
     >
-      <Typography variant="body2" sx={{ 
-        color: '#A0725C',
-        fontSize: '0.85rem',
-        lineHeight: 1.5,
-        fontStyle: 'italic'
-      }}>
+      <Typography variant="body2">
         <strong>Gnome&apos;s Note:</strong> This friendly garden helper uses AI magic to provide watering advice. 
         While I&apos;ve learned much in my centuries of garden watching, I can still make mistakes! 
         Always check your soil, consider your plants&apos; specific needs, and trust your own gardening instincts too. 🌱

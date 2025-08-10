@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Avatar, Typography, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
+import { Box, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
 import { Thermostat } from '@mui/icons-material';
-import Image from 'next/image';
+import IntroText from './IntroText';
 
 export default function Header({ temperatureUnit, setTemperatureUnit }) {
   return (
@@ -49,63 +49,8 @@ export default function Header({ temperatureUnit, setTemperatureUnit }) {
           </ToggleButtonGroup>
         </Tooltip>
       </Box>
-
-      <Box
-        sx={{
-          width: { xs: 140, sm: 160, md: 180 },
-          height: { xs: 140, sm: 160, md: 180 },
-          margin: '0 auto 32px',
-          borderRadius: 2,
-          overflow: 'hidden',
-          bgcolor: 'transparent'
-        }}
-      >
-        <Image 
-          src="/water-gnome-logo.png" 
-          alt="Water Gnome Logo"
-          width={180}
-          height={180}
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'contain'
-          }}
-          priority
-        />
-      </Box>
       
-      <Typography 
-        variant="h1" 
-        component="h1" 
-        color="#4A5D3A" 
-        maxWidth="sm" 
-        mx="auto"
-        sx={{
-          fontWeight: 500,
-          fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.2rem' },
-          lineHeight: 1.1,
-          letterSpacing: '0.01em',
-          mb: 2,
-          fontFamily: 'serif'
-        }}
-      >
-        Water Gnome AI
-      </Typography>
-      
-      <Typography 
-        variant="body1" 
-        color="#7A8471" 
-        maxWidth="sm" 
-        mx="auto"
-        sx={{
-          fontWeight: 400,
-          lineHeight: 1.6,
-          fontSize: '1rem',
-          fontStyle: 'italic'
-        }}
-      >
-        Hee-hee-hoo!  I&apos;m <strong>Wynn the Water Gnome</strong>. With a little help from some modern magic (and a peek at the forecast!), I&apos;ll tell you when it&apos;s time to water, so your garden is always happy.
-      </Typography>
+      <IntroText />
     </Box>
   );
 }
