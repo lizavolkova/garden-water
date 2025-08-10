@@ -9,8 +9,8 @@ export async function fetchVisualCrossingWeatherData(zipCode) {
     const API_KEY = process.env.VISUAL_CROSSING_API_KEY || 'demo'; // Demo key for testing
     console.log(`[VisualCrossing] Using API key: ${API_KEY === 'demo' ? 'demo (fallback mode)' : 'configured'}`);
     
-    // First, get coordinates from zip code
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
+    // First, get coordinates and location info from zip code
+    const { lat, lon, city, state } = await fetchLocationFromZipCode(zipCode);
 
     // Get extended forecast from Visual Crossing (3 days prior + 7 days future)
     console.log(`[VisualCrossing] Fetching extended forecast for coordinates: ${lat}, ${lon}`);
@@ -50,12 +50,27 @@ export async function fetchVisualCrossingWeatherData(zipCode) {
     const dailyData = processVisualCrossingForecastData(forecastData);
     console.log(`[VisualCrossing] Processed into ${dailyData.length} daily summaries`);
     
-    return dailyData;
+    // Add location information to the response
+    return {
+      weather: dailyData,
+      location: { city, state, zipCode }
+    };
   } catch (error) {
     console.error('[VisualCrossing] API error:', error);
     console.log('[VisualCrossing] Falling back to demo data');
-    // Return demo data as fallback
-    return generateDemoWeatherData();
+    // Return demo data as fallback with location if available
+    try {
+      const { city, state } = await fetchLocationFromZipCode(zipCode);
+      return {
+        weather: generateDemoWeatherData(),
+        location: { city, state, zipCode }
+      };
+    } catch (locationError) {
+      return {
+        weather: generateDemoWeatherData(),
+        location: { city: 'Demo City', state: 'NY', zipCode }
+      };
+    }
   }
 }
 

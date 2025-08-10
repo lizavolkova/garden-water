@@ -4,7 +4,15 @@ import { Box, Typography } from '@mui/material';
 
 export default function IntroText() {
   return (
-    <Box sx={{ textAlign: 'center', mb: { xs: '-50px', lg: 4 }, px: 3 }}>
+    <Box sx={{ 
+      textAlign: 'center', 
+      mb: { xs: '-50px', lg: 4 }, 
+      px: 3,
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      MozUserSelect: 'none',
+      msUserSelect: 'none'
+    }}>
       <Typography 
         variant="h2" 
         component="h2" 

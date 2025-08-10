@@ -4,8 +4,8 @@ export async function fetchNWSWeatherData(zipCode) {
   console.log('[NWS] Starting weather data fetch for ZIP:', zipCode);
   
   try {
-    // First, get coordinates from zip code using a geocoding service
-    const { lat, lon } = await fetchLocationFromZipCode(zipCode);
+    // First, get coordinates and location info from zip code using a geocoding service
+    const { lat, lon, city, state } = await fetchLocationFromZipCode(zipCode);
 
     // Get NWS office and grid coordinates
     console.log(`[NWS] Getting grid information for coordinates: ${lat}, ${lon}`);
@@ -34,7 +34,10 @@ export async function fetchNWSWeatherData(zipCode) {
     const dailyData = processNWSForecastData(forecastData);
     console.log(`[NWS] Processed into ${dailyData.length} daily summaries`);
     
-    return dailyData;
+    return {
+      weather: dailyData,
+      location: { city, state, zipCode }
+    };
   } catch (error) {
     console.error('[NWS] API error:', error);
     throw new Error(`NWS API failed: ${error.message}`);

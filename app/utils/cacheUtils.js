@@ -15,6 +15,7 @@ export const getCachedData = (zipCode) => {
       if (cacheAge < twelveHours) {
         return {
           weather: data.weather,
+          location: data.location,
           advice: data.advice,
           todayAdvice: data.todayAdvice
         };
@@ -30,7 +31,7 @@ export const getCachedData = (zipCode) => {
   return null;
 };
 
-export const setCachedData = (zipCode, weather, advice, todayAdvice) => {
+export const setCachedData = (zipCode, weather, advice, todayAdvice, location = null) => {
   if (typeof window === 'undefined') return;
   
   try {
@@ -38,6 +39,7 @@ export const setCachedData = (zipCode, weather, advice, todayAdvice) => {
     const cacheData = {
       timestamp: new Date().getTime(),
       weather,
+      location,
       advice,
       todayAdvice
     };
