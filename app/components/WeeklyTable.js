@@ -368,7 +368,7 @@ export default function WeeklyTable({
                   {isExpanded && day.reason && (
                     <Box sx={{
                       px: 2,
-                      pb: 3,
+                      pb: isPast ? 1 :3,
                       pt: 1,
                       borderTop: '1px solid #cad597',
                       bgcolor: '#f0f9c8',
@@ -389,17 +389,11 @@ export default function WeeklyTable({
                           color: '#6b7280',
                           gap: 1
                         }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            🌡️ <span>72</span>
-                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>🌡️  <span>{weather?.humidity || 0}%</span></Box>
                           <span>|</span>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            💧 <span>15</span>
-                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>💧 <span>{weather?.precip_prob || 0}%</span></Box>
                           <span>|</span>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            🌬️ <span>8</span>
-                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>💨 <span>{weather?.wind_speed || 0}mph</span></Box>
                         </Box>
                         
                         {/* Right side - rainfall progress bar */}
@@ -430,7 +424,9 @@ export default function WeeklyTable({
                         </Box>
                       </Box>
                       
-                      <Typography variant="h3" sx={{
+                    {!isPast &&
+                    <>
+                    <Typography variant="h3" sx={{
                         color: '#3f2a1e',
                         lineHeight: 1.5
                       }}>
@@ -443,6 +439,11 @@ export default function WeeklyTable({
                       }}>
                         {day.reason}
                       </Typography>
+
+                    </>
+                    }
+                      
+
                     </Box>
                   )}
                 </CardContent>

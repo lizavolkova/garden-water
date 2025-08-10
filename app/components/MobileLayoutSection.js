@@ -18,7 +18,7 @@ export default function MobileLayoutSection({
       <GnomeCharacter 
         variant="mobile"
         sx={{ 
-          pr: '67px', 
+          pr: '106px', 
           top: '46px', 
           mb: -1,
           ...gnomeProps 
