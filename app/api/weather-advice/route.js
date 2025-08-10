@@ -18,6 +18,10 @@ const openai = new OpenAI({
 
   // Helper: YYYY-MM-DD in your app's local zone (defaults to America/New_York)
   function getLocalDateString(tz = process.env.TZ || "America/New_York") {
+    // Handle case where TZ might have a colon prefix (e.g., ":UTC" instead of "UTC")
+    if (tz && tz.startsWith(':')) {
+      tz = tz.substring(1);
+    }
     return new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
   }
 
