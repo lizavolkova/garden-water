@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { display } from '@mui/system';
 
 // FOR TESTING: Change this value to 'yes', 'maybe', or 'no' to test different states
-const TEST_OVERRIDE = 'no'; // Set to 'yes', 'maybe', 'no', or null to disable
+const TEST_OVERRIDE = null; // Set to 'yes', 'maybe', 'no', or null to disable
 
 // SEASONAL THEME CONFIGURATION
 // Change this to 'spring', 'summer', 'fall', or 'winter' to test different seasonal colors
